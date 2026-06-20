@@ -48,6 +48,7 @@ var DEFAULT_PROMPT = `\u4F60\u662F\u4E00\u4E2A\u5B66\u4E60\u8F85\u52A9\u5DE5\u51
 6. \u4E0D\u8981\u5BF9\u6807\u9898\u3001\u5217\u8868\u6807\u8BB0\u3001\u94FE\u63A5\u7B49\u7ED3\u6784\u5143\u7D20\u8FDB\u884C\u6316\u7A7A
 7. \u76F4\u63A5\u8FD4\u56DE\u4FEE\u6539\u540E\u7684\u5B8C\u6574\u5185\u5BB9\uFF0C\u4E0D\u8981\u6DFB\u52A0\u4EFB\u4F55\u989D\u5916\u8BF4\u660E\u6216\u89E3\u91CA`;
 var DEFAULT_SETTINGS = {
+  lang: "auto",
   apiEndpoint: "https://api.openai.com/v1/chat/completions",
   apiKey: "",
   model: "gpt-4o-mini",
@@ -65,46 +66,56 @@ var ClozeReviewSettingTab = class extends import_obsidian.PluginSettingTab {
   display() {
     const { containerEl } = this;
     containerEl.empty();
-    containerEl.createEl("h3", { text: "AI \u914D\u7F6E" });
-    new import_obsidian.Setting(containerEl).setName("API \u7AEF\u70B9").setDesc("OpenAI \u517C\u5BB9\u7684 API \u5730\u5740\uFF08\u652F\u6301 OpenAI / \u667A\u8C31 / Moonshot / Ollama \u7B49\uFF09").addText(
+    const t2 = this.plugin.t;
+    containerEl.createEl("h3", { text: t2.language });
+    new import_obsidian.Setting(containerEl).setName(t2.language).setDesc(t2.languageDesc).addDropdown(
+      (dropdown) => dropdown.addOption("auto", t2.languageDesc).addOption("zh", t2.chinese).addOption("en", t2.english).setValue(this.plugin.settings.lang).onChange(async (value) => {
+        this.plugin.settings.lang = value;
+        await this.plugin.saveSettings();
+        this.plugin.updateLang();
+        this.display();
+      })
+    );
+    containerEl.createEl("h3", { text: t2.aiConfig });
+    new import_obsidian.Setting(containerEl).setName(t2.apiEndpoint).setDesc(t2.apiEndpointDesc).addText(
       (text) => text.setPlaceholder("https://api.openai.com/v1/chat/completions").setValue(this.plugin.settings.apiEndpoint).onChange(async (value) => {
         this.plugin.settings.apiEndpoint = value;
         await this.plugin.saveSettings();
       })
     );
-    new import_obsidian.Setting(containerEl).setName("API Key").setDesc("API \u5BC6\u94A5").addText((text) => {
+    new import_obsidian.Setting(containerEl).setName(t2.apiKey).setDesc(t2.apiKeyDesc).addText((text) => {
       text.inputEl.type = "password";
       text.setPlaceholder("sk-...").setValue(this.plugin.settings.apiKey).onChange(async (value) => {
         this.plugin.settings.apiKey = value;
         await this.plugin.saveSettings();
       });
     });
-    new import_obsidian.Setting(containerEl).setName("\u6A21\u578B").setDesc("\u4F7F\u7528\u7684\u6A21\u578B\u540D\u79F0").addText(
+    new import_obsidian.Setting(containerEl).setName(t2.model).setDesc(t2.modelDesc).addText(
       (text) => text.setPlaceholder("gpt-4o-mini").setValue(this.plugin.settings.model).onChange(async (value) => {
         this.plugin.settings.model = value;
         await this.plugin.saveSettings();
       })
     );
-    new import_obsidian.Setting(containerEl).setName("\u6E29\u5EA6").setDesc("\u751F\u6210\u6E29\u5EA6 (0-1)\uFF0C\u8D8A\u4F4E\u8D8A\u786E\u5B9A\u6027").addSlider(
+    new import_obsidian.Setting(containerEl).setName(t2.temperature).setDesc(t2.temperatureDesc).addSlider(
       (slider) => slider.setLimits(0, 1, 0.1).setValue(this.plugin.settings.temperature).setDynamicTooltip().onChange(async (value) => {
         this.plugin.settings.temperature = value;
         await this.plugin.saveSettings();
       })
     );
-    containerEl.createEl("h3", { text: "\u6316\u7A7A\u8BBE\u7F6E" });
-    new import_obsidian.Setting(containerEl).setName("\u96BE\u5EA6").setDesc("\u6316\u7A7A\u5BC6\u5EA6\u81EA\u52A8\u6839\u636E\u5185\u5BB9\u957F\u5EA6\u548C\u96BE\u5EA6\u8BA1\u7B97").addDropdown(
-      (dropdown) => dropdown.addOption("easy", "\u7B80\u5355 - \u7A00\u758F\uFF0C\u53EA\u6316\u6700\u6838\u5FC3\u5185\u5BB9").addOption("medium", "\u4E2D\u7B49 - \u9002\u5EA6\u6316\u7A7A").addOption("hard", "\u56F0\u96BE - \u5BC6\u96C6\u6316\u7A7A").addOption("extreme", "\u8D85\u5BC6\u96C6 - \u51E0\u4E4E\u8986\u76D6\u6240\u6709\u77E5\u8BC6\u70B9").setValue(this.plugin.settings.difficulty).onChange(async (value) => {
+    containerEl.createEl("h3", { text: t2.clozeSettings });
+    new import_obsidian.Setting(containerEl).setName(t2.difficulty).setDesc(t2.difficultyDesc).addDropdown(
+      (dropdown) => dropdown.addOption("easy", t2.easy).addOption("medium", t2.medium).addOption("hard", t2.hard).addOption("extreme", t2.extreme).setValue(this.plugin.settings.difficulty).onChange(async (value) => {
         this.plugin.settings.difficulty = value;
         await this.plugin.saveSettings();
       })
     );
-    new import_obsidian.Setting(containerEl).setName("\u81EA\u52A8\u8FDB\u5165\u590D\u4E60\u6A21\u5F0F").setDesc("AI \u751F\u6210\u6316\u7A7A\u540E\u81EA\u52A8\u8FDB\u5165\u590D\u4E60\u6A21\u5F0F").addToggle(
+    new import_obsidian.Setting(containerEl).setName(t2.autoReview).setDesc(t2.autoReviewDesc).addToggle(
       (toggle) => toggle.setValue(this.plugin.settings.autoEnterReview).onChange(async (value) => {
         this.plugin.settings.autoEnterReview = value;
         await this.plugin.saveSettings();
       })
     );
-    new import_obsidian.Setting(containerEl).setName("\u81EA\u5B9A\u4E49\u63D0\u793A\u8BCD").setDesc("\u7559\u7A7A\u5219\u4F7F\u7528\u9ED8\u8BA4\u63D0\u793A\u8BCD").addTextArea((text) => {
+    new import_obsidian.Setting(containerEl).setName(t2.customPrompt).setDesc(t2.customPromptDesc).addTextArea((text) => {
       text.setPlaceholder(DEFAULT_PROMPT).setValue(this.plugin.settings.customPrompt).onChange(async (value) => {
         this.plugin.settings.customPrompt = value;
         await this.plugin.saveSettings();
@@ -114,13 +125,13 @@ var ClozeReviewSettingTab = class extends import_obsidian.PluginSettingTab {
     });
     const hintEl = containerEl.createEl("div", { cls: "cloze-review-hint" });
     hintEl.innerHTML = `
-			<p><strong>\u6316\u7A7A\u8BED\u6CD5\uFF1A</strong></p>
+			<p><strong>${t2.clozeSyntax}\uFF1A</strong></p>
 			<ul>
-				<li><code>{{c1::\u5185\u5BB9}}</code> - \u57FA\u672C\u6316\u7A7A</li>
-				<li><code>{{c1::\u5185\u5BB9::\u63D0\u793A}}</code> - \u5E26\u63D0\u793A\u7684\u6316\u7A7A</li>
+				<li><code>{{c1::\u5185\u5BB9}}</code> - ${t2.basicCloze}</li>
+				<li><code>{{c1::\u5185\u5BB9::\u63D0\u793A}}</code> - ${t2.hintCloze}</li>
 			</ul>
-			<p>\u6316\u7A7A\u6570\u91CF\u6839\u636E\u7B14\u8BB0\u5185\u5BB9\u957F\u5EA6\u548C\u96BE\u5EA6\u81EA\u52A8\u8BA1\u7B97\uFF0C\u65E0\u9700\u624B\u52A8\u8BBE\u7F6E\u3002</p>
-			<p>\u5728\u9605\u8BFB\u89C6\u56FE\u4E2D\uFF0C\u590D\u4E60\u6A21\u5F0F\u4F1A\u5C06\u6316\u7A7A\u5185\u5BB9\u9690\u85CF\u4E3A\u7A7A\u767D\uFF0C\u70B9\u51FB\u53EF\u663E\u793A\u7B54\u6848\u3002</p>
+			<p>${t2.autoCalc}</p>
+			<p>${t2.readingDesc}</p>
 		`;
   }
 };
@@ -197,7 +208,7 @@ ${chunks[i]}`;
   async callAPI(systemMessage, userMessage) {
     var _a;
     if (!this.settings.apiKey) {
-      throw new Error("\u8BF7\u5148\u5728\u8BBE\u7F6E\u4E2D\u914D\u7F6E API Key");
+      throw new Error("API key not configured");
     }
     const body = JSON.stringify({
       model: this.settings.model,
@@ -219,7 +230,7 @@ ${chunks[i]}`;
       throw: false
     });
     if (response.status >= 400) {
-      let errorMsg = `API \u8BF7\u6C42\u5931\u8D25 (${response.status})`;
+      let errorMsg = `API ${response.status}`;
       try {
         const errorJson = typeof response.json === "string" ? JSON.parse(response.json) : response.json;
         if ((_a = errorJson == null ? void 0 : errorJson.error) == null ? void 0 : _a.message) {
@@ -237,7 +248,7 @@ ${chunks[i]}`;
     var _a, _b, _c;
     const content = (_c = (_b = (_a = response == null ? void 0 : response.choices) == null ? void 0 : _a[0]) == null ? void 0 : _b.message) == null ? void 0 : _c.content;
     if (!content) {
-      throw new Error("AI \u8FD4\u56DE\u5185\u5BB9\u4E3A\u7A7A");
+      throw new Error("Empty AI response");
     }
     let result = content.trim();
     if (result.startsWith("```")) {
@@ -313,14 +324,14 @@ var ReviewMode = class {
     const view = this.getMarkdownView();
     if (!view || !view.file) {
       if (!silent)
-        new import_obsidian3.Notice("\u8BF7\u5148\u6253\u5F00\u4E00\u4E2A\u7B14\u8BB0");
+        new import_obsidian3.Notice(this.plugin.t.openNoteFirst);
       this.active = false;
       return;
     }
     const clozeContent = this.plugin.clozeCache.get(view.file.path);
     if (!clozeContent) {
       if (!silent)
-        new import_obsidian3.Notice("\u8BF7\u5148\u751F\u6210\u6316\u7A7A\u5185\u5BB9");
+        new import_obsidian3.Notice(this.plugin.t.generateFirst);
       this.active = false;
       return;
     }
@@ -331,7 +342,7 @@ var ReviewMode = class {
     await this.showClozeOverlay(view, clozeContent);
     this.applyReviewClass(view);
     if (!silent)
-      new import_obsidian3.Notice("\u6316\u7A7A\u590D\u4E60\u6A21\u5F0F\u5DF2\u5F00\u542F");
+      new import_obsidian3.Notice(this.plugin.t.reviewOn);
   }
   async showClozeOverlay(view, content) {
     const previewEl = view.containerEl.querySelector(".markdown-preview-view");
@@ -380,7 +391,7 @@ var ReviewMode = class {
       this.removeReviewClass(view);
     }
     if (!silent)
-      new import_obsidian3.Notice("\u6316\u7A7A\u590D\u4E60\u6A21\u5F0F\u5DF2\u5173\u95ED");
+      new import_obsidian3.Notice(this.plugin.t.reviewOff);
   }
   applyReviewClass(view) {
     if (!view)
@@ -404,7 +415,7 @@ var ReviewMode = class {
   }
   revealAll() {
     if (!this.active) {
-      new import_obsidian3.Notice("\u8BF7\u5148\u5F00\u542F\u590D\u4E60\u6A21\u5F0F");
+      new import_obsidian3.Notice(this.plugin.t.activateFirst);
       return;
     }
     const view = this.getMarkdownView();
@@ -517,7 +528,7 @@ var ReviewMode = class {
     el.appendChild(answerSpan);
     const placeholderSpan = document.createElement("span");
     placeholderSpan.className = "cloze-placeholder";
-    placeholderSpan.textContent = hint ? `[${hint}]` : "\uFF3B \uFF3D";
+    placeholderSpan.textContent = hint ? `[${hint}]` : this.plugin.t.placeholder;
     el.appendChild(placeholderSpan);
     el.addEventListener("click", (e) => {
       e.preventDefault();
@@ -584,7 +595,7 @@ var BottomToolbar = class {
     this.leftGroup.className = "cloze-toolbar-group cloze-toolbar-left";
     this.statusEl = document.createElement("span");
     this.statusEl.className = "cloze-toolbar-status";
-    this.statusEl.textContent = "\u5C31\u7EEA";
+    this.statusEl.textContent = t.ready;
     this.leftGroup.appendChild(this.statusEl);
     this.leftGroup.appendChild(this.createIconButton("settings", () => {
       this.plugin.openSettings();
@@ -601,17 +612,18 @@ var BottomToolbar = class {
     if (!this.centerGroup)
       return;
     this.centerGroup.empty();
+    const t2 = this.plugin.t;
     const generating = this.plugin.isGenerating();
     const reviewing = this.plugin.reviewMode.isActive();
     const hasCache = this.plugin.reviewMode.hasCachedClozes();
     if (generating) {
-      this.centerGroup.appendChild(this.createButton("\u751F\u6210\u4E2D\u2026", "loader", () => {
+      this.centerGroup.appendChild(this.createButton(t2.generating, "loader", () => {
       }, true));
     } else if (reviewing) {
       const stats = this.plugin.reviewMode.getStats();
       const allRevealed = stats.total > 0 && stats.revealed >= stats.total;
       this.centerGroup.appendChild(this.createButton(
-        allRevealed ? "\u91CD\u7F6E" : "\u663E\u793A\u7B54\u6848",
+        allRevealed ? t2.reset : t2.showAnswer,
         allRevealed ? "rotate-ccw" : "eye-off",
         () => {
           if (allRevealed) {
@@ -622,16 +634,16 @@ var BottomToolbar = class {
           this.refresh();
         }
       ));
-      this.centerGroup.appendChild(this.createButton("\u9000\u51FA\u590D\u4E60", "x", () => {
+      this.centerGroup.appendChild(this.createButton(t2.exitReview, "x", () => {
         this.plugin.reviewMode.deactivate();
         this.refresh();
       }));
     } else {
-      this.centerGroup.appendChild(this.createButton("AI \u6316\u7A7A", "sparkles", () => {
+      this.centerGroup.appendChild(this.createButton(t2.aiGenerate, "sparkles", () => {
         this.plugin.generateCloze();
       }));
       if (hasCache) {
-        this.centerGroup.appendChild(this.createButton("\u5F00\u59CB\u590D\u4E60", "play", () => {
+        this.centerGroup.appendChild(this.createButton(t2.startReview, "play", () => {
           this.plugin.startReview();
         }));
       }
@@ -641,8 +653,9 @@ var BottomToolbar = class {
   updateStatus(generating, reviewing, hasCache) {
     if (!this.statusEl)
       return;
+    const t2 = this.plugin.t;
     if (generating) {
-      this.statusEl.textContent = "AI \u751F\u6210\u4E2D\u2026";
+      this.statusEl.textContent = t2.aiGenerating;
       this.statusEl.classList.add("generating");
       this.statusEl.classList.remove("reviewing");
     } else if (reviewing) {
@@ -656,12 +669,12 @@ var BottomToolbar = class {
         const cached = this.plugin.clozeCache.get(view.file.path);
         if (cached) {
           const count = this.plugin.clozeParser.count(cached);
-          this.statusEl.textContent = `${count} \u4E2A\u6316\u7A7A`;
+          this.statusEl.textContent = `${count} ${t2.clozesCount}`;
         }
       }
       this.statusEl.classList.remove("reviewing", "generating");
     } else {
-      this.statusEl.textContent = "\u5C31\u7EEA";
+      this.statusEl.textContent = t2.ready;
       this.statusEl.classList.remove("reviewing", "generating");
     }
   }
@@ -720,6 +733,141 @@ var BottomToolbar = class {
   }
 };
 
+// src/i18n.ts
+var LOCALES = {
+  zh: {
+    ready: "\u5C31\u7EEA",
+    aiGenerate: "AI \u6316\u7A7A",
+    generating: "\u751F\u6210\u4E2D\u2026",
+    aiGenerating: "AI \u751F\u6210\u4E2D\u2026",
+    showAnswer: "\u663E\u793A\u7B54\u6848",
+    reset: "\u91CD\u7F6E",
+    exitReview: "\u9000\u51FA\u590D\u4E60",
+    startReview: "\u5F00\u59CB\u590D\u4E60",
+    clozesCount: "\u4E2A\u6316\u7A7A",
+    reviewOn: "\u6316\u7A7A\u590D\u4E60\u6A21\u5F0F\u5DF2\u5F00\u542F",
+    reviewOff: "\u6316\u7A7A\u590D\u4E60\u6A21\u5F0F\u5DF2\u5173\u95ED",
+    openNoteFirst: "\u8BF7\u5148\u6253\u5F00\u4E00\u4E2A\u7B14\u8BB0",
+    generateFirst: "\u8BF7\u5148\u751F\u6210\u6316\u7A7A\u5185\u5BB9",
+    allRevealed: "\u5DF2\u663E\u793A\u6240\u6709\u7B54\u6848",
+    activateFirst: "\u8BF7\u5148\u5F00\u542F\u590D\u4E60\u6A21\u5F0F",
+    aiGeneratingTitle: "AI \u6B63\u5728\u751F\u6210\u6316\u7A7A\u2026",
+    noContent: "\u6CA1\u6709\u53EF\u6316\u7A7A\u7684\u5185\u5BB9",
+    configApiKey: "\u8BF7\u5148\u5728\u8BBE\u7F6E\u4E2D\u914D\u7F6E API Key",
+    generated: "\u6316\u7A7A\u751F\u6210\u5B8C\u6210\uFF01\u5171",
+    genFailed: "AI \u751F\u6210\u5931\u8D25: ",
+    noCache: "\u6CA1\u6709\u7F13\u5B58\u7684\u6316\u7A7A\u5185\u5BB9\uFF0C\u8BF7\u5148\u70B9\u51FB AI \u6316\u7A7A",
+    apiFailed: "API \u8BF7\u6C42\u5931\u8D25",
+    aiEmpty: "AI \u8FD4\u56DE\u5185\u5BB9\u4E3A\u7A7A",
+    aiConfig: "AI \u914D\u7F6E",
+    apiEndpoint: "API \u7AEF\u70B9",
+    apiEndpointDesc: "OpenAI \u517C\u5BB9\u7684 API \u5730\u5740\uFF08\u652F\u6301 OpenAI / \u667A\u8C31 / Moonshot / Ollama \u7B49\uFF09",
+    apiKey: "API Key",
+    apiKeyDesc: "API \u5BC6\u94A5",
+    model: "\u6A21\u578B",
+    modelDesc: "\u4F7F\u7528\u7684\u6A21\u578B\u540D\u79F0",
+    temperature: "\u6E29\u5EA6",
+    temperatureDesc: "\u751F\u6210\u6E29\u5EA6 (0-1)\uFF0C\u8D8A\u4F4E\u8D8A\u786E\u5B9A\u6027",
+    clozeSettings: "\u6316\u7A7A\u8BBE\u7F6E",
+    difficulty: "\u96BE\u5EA6",
+    difficultyDesc: "\u6316\u7A7A\u5BC6\u5EA6\u6839\u636E\u5185\u5BB9\u957F\u5EA6\u548C\u96BE\u5EA6\u81EA\u52A8\u8BA1\u7B97",
+    easy: "\u7B80\u5355 - \u7A00\u758F\uFF0C\u53EA\u6316\u6700\u6838\u5FC3\u5185\u5BB9",
+    medium: "\u4E2D\u7B49 - \u9002\u5EA6\u6316\u7A7A",
+    hard: "\u56F0\u96BE - \u5BC6\u96C6\u6316\u7A7A",
+    extreme: "\u8D85\u5BC6\u96C6 - \u51E0\u4E4E\u8986\u76D6\u6240\u6709\u77E5\u8BC6\u70B9",
+    autoReview: "\u81EA\u52A8\u8FDB\u5165\u590D\u4E60\u6A21\u5F0F",
+    autoReviewDesc: "AI \u751F\u6210\u6316\u7A7A\u540E\u81EA\u52A8\u8FDB\u5165\u590D\u4E60\u6A21\u5F0F",
+    customPrompt: "\u81EA\u5B9A\u4E49\u63D0\u793A\u8BCD",
+    customPromptDesc: "\u7559\u7A7A\u5219\u4F7F\u7528\u9ED8\u8BA4\u63D0\u793A\u8BCD",
+    language: "\u8BED\u8A00",
+    languageDesc: "\u754C\u9762\u8BED\u8A00",
+    chinese: "\u4E2D\u6587",
+    english: "English",
+    clozeSyntax: "\u6316\u7A7A\u8BED\u6CD5",
+    basicCloze: "\u57FA\u672C\u6316\u7A7A",
+    hintCloze: "\u5E26\u63D0\u793A\u7684\u6316\u7A7A",
+    autoCalc: "\u6316\u7A7A\u6570\u91CF\u6839\u636E\u7B14\u8BB0\u5185\u5BB9\u957F\u5EA6\u548C\u96BE\u5EA6\u81EA\u52A8\u8BA1\u7B97\uFF0C\u65E0\u9700\u624B\u52A8\u8BBE\u7F6E\u3002",
+    readingDesc: "\u5728\u9605\u8BFB\u89C6\u56FE\u4E2D\uFF0C\u590D\u4E60\u6A21\u5F0F\u4F1A\u5C06\u6316\u7A7A\u5185\u5BB9\u9690\u85CF\u4E3A\u7A7A\u767D\uFF0C\u70B9\u51FB\u53EF\u663E\u793A\u7B54\u6848\u3002",
+    cmdAiGenerate: "AI \u751F\u6210\u6316\u7A7A",
+    cmdStartReview: "\u5F00\u59CB\u590D\u4E60\uFF08\u4F7F\u7528\u7F13\u5B58\uFF09",
+    cmdToggleReview: "\u5207\u6362\u590D\u4E60\u6A21\u5F0F",
+    cmdShowReset: "\u663E\u793A/\u91CD\u7F6E\u7B54\u6848",
+    placeholder: "\uFF3B \uFF3D"
+  },
+  en: {
+    ready: "Ready",
+    aiGenerate: "AI Cloze",
+    generating: "Generating\u2026",
+    aiGenerating: "AI generating\u2026",
+    showAnswer: "Reveal",
+    reset: "Reset",
+    exitReview: "Exit",
+    startReview: "Review",
+    clozesCount: " clozes",
+    reviewOn: "Review mode activated",
+    reviewOff: "Review mode deactivated",
+    openNoteFirst: "Please open a note first",
+    generateFirst: "Please generate clozes first",
+    allRevealed: "All answers revealed",
+    activateFirst: "Please activate review mode first",
+    aiGeneratingTitle: "AI generating clozes\u2026",
+    noContent: "No content to cloze",
+    configApiKey: "Please configure API key in settings",
+    generated: "Generated ",
+    genFailed: "AI generation failed: ",
+    noCache: "No cached cloze content. Click AI Cloze first.",
+    apiFailed: "API request failed",
+    aiEmpty: "AI returned empty content",
+    aiConfig: "AI Configuration",
+    apiEndpoint: "API Endpoint",
+    apiEndpointDesc: "OpenAI-compatible API URL",
+    apiKey: "API Key",
+    apiKeyDesc: "Your API key",
+    model: "Model",
+    modelDesc: "Model name to use",
+    temperature: "Temperature",
+    temperatureDesc: "Generation temperature (0-1)",
+    clozeSettings: "Cloze Settings",
+    difficulty: "Difficulty",
+    difficultyDesc: "Density auto-calculated from content length and difficulty",
+    easy: "Easy - sparse, keywords only",
+    medium: "Medium - moderate coverage",
+    hard: "Hard - dense coverage",
+    extreme: "Extreme - full coverage",
+    autoReview: "Auto enter review",
+    autoReviewDesc: "Automatically enter review after AI generation",
+    customPrompt: "Custom prompt",
+    customPromptDesc: "Leave empty to use default prompt",
+    language: "Language",
+    languageDesc: "Interface language",
+    chinese: "\u4E2D\u6587",
+    english: "English",
+    clozeSyntax: "Cloze Syntax",
+    basicCloze: "Basic cloze",
+    hintCloze: "Cloze with hint",
+    autoCalc: "Cloze count is auto-calculated from content length and difficulty.",
+    readingDesc: "In reading view, review mode hides cloze answers as blanks, click to reveal.",
+    cmdAiGenerate: "AI generate clozes",
+    cmdStartReview: "Start review (use cache)",
+    cmdToggleReview: "Toggle review mode",
+    cmdShowReset: "Show/Reset answers",
+    placeholder: "[ __ ]"
+  }
+};
+function getLocale(lang) {
+  return LOCALES[lang] || LOCALES.en;
+}
+function detectLanguage() {
+  var _a;
+  try {
+    const lang = (_a = navigator.language) == null ? void 0 : _a.toLowerCase();
+    if (lang && (lang.startsWith("zh") || lang.includes("cn")))
+      return "zh";
+  } catch (e) {
+  }
+  return "en";
+}
+
 // main.ts
 var ClozeReviewPlugin = class extends import_obsidian5.Plugin {
   constructor() {
@@ -731,10 +879,19 @@ var ClozeReviewPlugin = class extends import_obsidian5.Plugin {
     __publicField(this, "toolbar");
     __publicField(this, "clozeCache", /* @__PURE__ */ new Map());
     __publicField(this, "generating", false);
+    __publicField(this, "_t", getLocale("en"));
+  }
+  get t() {
+    return this._t;
+  }
+  updateLang() {
+    const lang = this.settings.lang === "auto" ? detectLanguage() : this.settings.lang;
+    this._t = getLocale(lang);
   }
   async onload() {
     await this.loadSettings();
     this.addSettingTab(new ClozeReviewSettingTab(this.app, this));
+    this.updateLang();
     this.aiService = new AIService(this.settings);
     this.clozeParser = new ClozeParser();
     this.reviewMode = new ReviewMode(this.app, this);
@@ -745,17 +902,17 @@ var ClozeReviewPlugin = class extends import_obsidian5.Plugin {
     this.toolbar.init();
     this.addCommand({
       id: "ai-generate-cloze",
-      name: "AI \u751F\u6210\u6316\u7A7A",
+      name: this.t.cmdAiGenerate,
       callback: () => this.generateCloze()
     });
     this.addCommand({
       id: "start-review",
-      name: "\u5F00\u59CB\u590D\u4E60\uFF08\u4F7F\u7528\u7F13\u5B58\uFF09",
+      name: this.t.cmdStartReview,
       callback: () => this.startReview()
     });
     this.addCommand({
       id: "toggle-review-mode",
-      name: "\u5207\u6362\u590D\u4E60\u6A21\u5F0F",
+      name: this.t.cmdToggleReview,
       callback: () => {
         if (this.reviewMode.isActive()) {
           this.reviewMode.deactivate();
@@ -790,11 +947,11 @@ var ClozeReviewPlugin = class extends import_obsidian5.Plugin {
       return;
     const view = this.getMarkdownView();
     if (!view || !view.file) {
-      new import_obsidian5.Notice("\u8BF7\u5148\u6253\u5F00\u4E00\u4E2A\u7B14\u8BB0");
+      new import_obsidian5.Notice(this.t.openNoteFirst);
       return;
     }
     if (!this.clozeCache.has(view.file.path)) {
-      new import_obsidian5.Notice("\u6CA1\u6709\u7F13\u5B58\u7684\u6316\u7A7A\u5185\u5BB9\uFF0C\u8BF7\u5148\u70B9\u51FB AI \u6316\u7A7A");
+      new import_obsidian5.Notice(this.t.noCache);
       return;
     }
     await this.reviewMode.activate();
@@ -805,22 +962,22 @@ var ClozeReviewPlugin = class extends import_obsidian5.Plugin {
       return;
     const view = this.getMarkdownView();
     if (!view || !view.file) {
-      new import_obsidian5.Notice("\u8BF7\u5148\u6253\u5F00\u4E00\u4E2A\u7B14\u8BB0");
+      new import_obsidian5.Notice(this.t.openNoteFirst);
       return;
     }
     this.generating = true;
     this.toolbar.refresh();
-    const notice = new import_obsidian5.Notice("AI \u6B63\u5728\u751F\u6210\u6316\u7A7A\u2026", 0);
+    const notice = new import_obsidian5.Notice(this.t.aiGeneratingTitle, 0);
     try {
       const editor = view.editor;
       const selection = editor.getSelection();
       const content = selection || editor.getValue();
       if (!content.trim()) {
-        new import_obsidian5.Notice("\u6CA1\u6709\u53EF\u6316\u7A7A\u7684\u5185\u5BB9");
+        new import_obsidian5.Notice(this.t.noContent);
         return;
       }
       if (!this.settings.apiKey) {
-        new import_obsidian5.Notice("\u8BF7\u5148\u5728\u8BBE\u7F6E\u4E2D\u914D\u7F6E API Key");
+        new import_obsidian5.Notice(this.t.configApiKey);
         this.openSettings();
         return;
       }
@@ -829,7 +986,7 @@ var ClozeReviewPlugin = class extends import_obsidian5.Plugin {
       this.clozeCache.set(view.file.path, result);
       notice.hide();
       const clozeCount = this.clozeParser.count(result);
-      new import_obsidian5.Notice(`\u6316\u7A7A\u751F\u6210\u5B8C\u6210\uFF01\u5171 ${clozeCount} \u4E2A\u6316\u7A7A`);
+      new import_obsidian5.Notice(`${this.t.generated} ${clozeCount} ${this.t.clozesCount}`);
       if (this.settings.autoEnterReview) {
         if (this.reviewMode.isActive()) {
           await this.reviewMode.deactivate();
@@ -838,7 +995,7 @@ var ClozeReviewPlugin = class extends import_obsidian5.Plugin {
       }
     } catch (e) {
       notice.hide();
-      new import_obsidian5.Notice("AI \u751F\u6210\u5931\u8D25: " + e.message, 5e3);
+      new import_obsidian5.Notice(this.t.genFailed + e.message, 5e3);
       console.error("Cloze generation error:", e);
     } finally {
       this.generating = false;

@@ -29,14 +29,14 @@ export class ReviewMode {
 		this.active = true;
 		const view = this.getMarkdownView();
 		if (!view || !view.file) {
-			if (!silent) new Notice('请先打开一个笔记');
+			if (!silent) new Notice(this.plugin.t.openNoteFirst);
 			this.active = false;
 			return;
 		}
 
 		const clozeContent = this.plugin.clozeCache.get(view.file.path);
 		if (!clozeContent) {
-			if (!silent) new Notice('请先生成挖空内容');
+			if (!silent) new Notice(this.plugin.t.generateFirst);
 			this.active = false;
 			return;
 		}
@@ -48,7 +48,7 @@ export class ReviewMode {
 
 		await this.showClozeOverlay(view, clozeContent);
 		this.applyReviewClass(view);
-		if (!silent) new Notice('挖空复习模式已开启');
+		if (!silent) new Notice(this.plugin.t.reviewOn);
 	}
 
 	private async showClozeOverlay(view: MarkdownView, content: string): Promise<void> {
@@ -103,7 +103,7 @@ export class ReviewMode {
 			this.hideClozeOverlay(view);
 			this.removeReviewClass(view);
 		}
-		if (!silent) new Notice('挖空复习模式已关闭');
+		if (!silent) new Notice(this.plugin.t.reviewOff);
 	}
 
 	private applyReviewClass(view: MarkdownView | null): void {
@@ -128,7 +128,7 @@ export class ReviewMode {
 
 	revealAll(): void {
 		if (!this.active) {
-			new Notice('请先开启复习模式');
+			new Notice(this.plugin.t.activateFirst);
 			return;
 		}
 		const view = this.getMarkdownView();
@@ -247,7 +247,7 @@ export class ReviewMode {
 
 		const placeholderSpan = document.createElement('span');
 		placeholderSpan.className = 'cloze-placeholder';
-		placeholderSpan.textContent = hint ? `[${hint}]` : '［ ］';
+		placeholderSpan.textContent = hint ? `[${hint}]` : this.plugin.t.placeholder;
 		el.appendChild(placeholderSpan);
 
 		el.addEventListener('click', (e) => {

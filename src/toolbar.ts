@@ -50,7 +50,7 @@ export class BottomToolbar {
 
 		this.statusEl = document.createElement('span');
 		this.statusEl.className = 'cloze-toolbar-status';
-		this.statusEl.textContent = '就绪';
+		this.statusEl.textContent = t.ready;
 		this.leftGroup.appendChild(this.statusEl);
 
 		this.leftGroup.appendChild(this.createIconButton('settings', () => {
@@ -73,18 +73,19 @@ export class BottomToolbar {
 		if (!this.centerGroup) return;
 		this.centerGroup.empty();
 
+		const t = this.plugin.t;
 		const generating = this.plugin.isGenerating();
 		const reviewing = this.plugin.reviewMode.isActive();
 		const hasCache = this.plugin.reviewMode.hasCachedClozes();
 
 		if (generating) {
-			this.centerGroup.appendChild(this.createButton('生成中…', 'loader', () => {}, true));
+			this.centerGroup.appendChild(this.createButton(t.generating, 'loader', () => {}, true));
 		} else if (reviewing) {
 			const stats = this.plugin.reviewMode.getStats();
 			const allRevealed = stats.total > 0 && stats.revealed >= stats.total;
 
 			this.centerGroup.appendChild(this.createButton(
-				allRevealed ? '重置' : '显示答案',
+				allRevealed ? t.reset : t.showAnswer,
 				allRevealed ? 'rotate-ccw' : 'eye-off',
 				() => {
 					if (allRevealed) {
@@ -96,17 +97,17 @@ export class BottomToolbar {
 				}
 			));
 
-			this.centerGroup.appendChild(this.createButton('退出复习', 'x', () => {
+			this.centerGroup.appendChild(this.createButton(t.exitReview, 'x', () => {
 				this.plugin.reviewMode.deactivate();
 				this.refresh();
 			}));
 		} else {
-			this.centerGroup.appendChild(this.createButton('AI 挖空', 'sparkles', () => {
+			this.centerGroup.appendChild(this.createButton(t.aiGenerate, 'sparkles', () => {
 				this.plugin.generateCloze();
 			}));
 
 			if (hasCache) {
-				this.centerGroup.appendChild(this.createButton('开始复习', 'play', () => {
+				this.centerGroup.appendChild(this.createButton(t.startReview, 'play', () => {
 					this.plugin.startReview();
 				}));
 			}
@@ -118,8 +119,10 @@ export class BottomToolbar {
 	private updateStatus(generating: boolean, reviewing: boolean, hasCache: boolean): void {
 		if (!this.statusEl) return;
 
+		const t = this.plugin.t;
+
 		if (generating) {
-			this.statusEl.textContent = 'AI 生成中…';
+			this.statusEl.textContent = t.aiGenerating;
 			this.statusEl.classList.add('generating');
 			this.statusEl.classList.remove('reviewing');
 		} else if (reviewing) {
@@ -133,12 +136,12 @@ export class BottomToolbar {
 				const cached = this.plugin.clozeCache.get(view.file.path);
 				if (cached) {
 					const count = this.plugin.clozeParser.count(cached);
-					this.statusEl.textContent = `${count} 个挖空`;
+					this.statusEl.textContent = `${count} ${t.clozesCount}`;
 				}
 			}
 			this.statusEl.classList.remove('reviewing', 'generating');
 		} else {
-			this.statusEl.textContent = '就绪';
+			this.statusEl.textContent = t.ready;
 			this.statusEl.classList.remove('reviewing', 'generating');
 		}
 	}

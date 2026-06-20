@@ -72,7 +72,7 @@ export class AIService {
 
 	private async callAPI(systemMessage: string, userMessage: string): Promise<any> {
 		if (!this.settings.apiKey) {
-			throw new Error('请先在设置中配置 API Key');
+			throw new Error('API key not configured');
 		}
 
 		const body = JSON.stringify({
@@ -97,7 +97,7 @@ export class AIService {
 		});
 
 		if (response.status >= 400) {
-			let errorMsg = `API 请求失败 (${response.status})`;
+			let errorMsg = `API ${response.status}`;
 			try {
 				const errorJson = typeof response.json === 'string' ? JSON.parse(response.json) : response.json;
 				if (errorJson?.error?.message) {
@@ -115,7 +115,7 @@ export class AIService {
 	private extractContent(response: any): string {
 		const content = response?.choices?.[0]?.message?.content;
 		if (!content) {
-			throw new Error('AI 返回内容为空');
+			throw new Error('Empty AI response');
 		}
 		let result = content.trim();
 		if (result.startsWith('```')) {

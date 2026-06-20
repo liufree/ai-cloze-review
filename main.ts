@@ -4,6 +4,7 @@ import { AIService } from './src/ai-service';
 import { ClozeParser } from './src/cloze-parser';
 import { ReviewMode } from './src/review-mode';
 import { BottomToolbar } from './src/toolbar';
+import { getLocale, detectLanguage, type Locale } from './src/i18n';
 
 export default class ClozeReviewPlugin extends Plugin {
 	settings: ClozeReviewSettings;
@@ -13,11 +14,20 @@ export default class ClozeReviewPlugin extends Plugin {
 	toolbar: BottomToolbar;
 	clozeCache: Map<string, string> = new Map();
 	private generating = false;
+	private _t: Locale = getLocale('en');
+
+	get t(): Locale { return this._t; }
+
+	updateLang(): void {
+		const lang = this.settings.lang === 'auto' ? detectLanguage() : this.settings.lang;
+		this._t = getLocale(lang);
+	}
 
 	async onload(): Promise<void> {
 		await this.loadSettings();
 		this.addSettingTab(new ClozeReviewSettingTab(this.app, this));
 
+		this.updateLang();
 		this.aiService = new AIService(this.settings);
 		this.clozeParser = new ClozeParser();
 		this.reviewMode = new ReviewMode(this.app, this);
@@ -31,19 +41,19 @@ export default class ClozeReviewPlugin extends Plugin {
 
 		this.addCommand({
 			id: 'ai-generate-cloze',
-			name: 'AI 生成挖空',
+			name: this.t.cmdAiGenerate,
 			callback: () => this.generateCloze(),
 		});
 
 		this.addCommand({
 			id: 'start-review',
-			name: '开始复习（使用缓存）',
+			name: this.t.cmdStartReview,
 			callback: () => this.startReview(),
 		});
 
 		this.addCommand({
 			id: 'toggle-review-mode',
-			name: '切换复习模式',
+			name: this.t.cmdToggleReview,
 			callback: () => {
 				if (this.reviewMode.isActive()) {
 					this.reviewMode.deactivate();
@@ -81,12 +91,12 @@ export default class ClozeReviewPlugin extends Plugin {
 
 		const view = this.getMarkdownView();
 		if (!view || !view.file) {
-			new Notice('请先打开一个笔记');
+			new Notice(this.t.openNoteFirst);
 			return;
 		}
 
 		if (!this.clozeCache.has(view.file.path)) {
-			new Notice('没有缓存的挖空内容，请先点击 AI 挖空');
+			new Notice(this.t.noCache);
 			return;
 		}
 
@@ -99,14 +109,14 @@ export default class ClozeReviewPlugin extends Plugin {
 
 		const view = this.getMarkdownView();
 		if (!view || !view.file) {
-			new Notice('请先打开一个笔记');
+			new Notice(this.t.openNoteFirst);
 			return;
 		}
 
 		this.generating = true;
 		this.toolbar.refresh();
 
-		const notice = new Notice('AI 正在生成挖空…', 0);
+		const notice = new Notice(this.t.aiGeneratingTitle, 0);
 
 		try {
 			const editor = view.editor;
@@ -114,12 +124,12 @@ export default class ClozeReviewPlugin extends Plugin {
 			const content = selection || editor.getValue();
 
 			if (!content.trim()) {
-				new Notice('没有可挖空的内容');
+				new Notice(this.t.noContent);
 				return;
 			}
 
 			if (!this.settings.apiKey) {
-				new Notice('请先在设置中配置 API Key');
+				new Notice(this.t.configApiKey);
 				this.openSettings();
 				return;
 			}
@@ -131,7 +141,7 @@ export default class ClozeReviewPlugin extends Plugin {
 
 			notice.hide();
 			const clozeCount = this.clozeParser.count(result);
-			new Notice(`挖空生成完成！共 ${clozeCount} 个挖空`);
+			new Notice(`${this.t.generated} ${clozeCount} ${this.t.clozesCount}`);
 
 			if (this.settings.autoEnterReview) {
 				if (this.reviewMode.isActive()) {
@@ -141,7 +151,7 @@ export default class ClozeReviewPlugin extends Plugin {
 			}
 		} catch (e) {
 			notice.hide();
-			new Notice('AI 生成失败: ' + (e as Error).message, 5000);
+			new Notice(this.t.genFailed + (e as Error).message, 5000);
 			console.error('Cloze generation error:', e);
 		} finally {
 			this.generating = false;
