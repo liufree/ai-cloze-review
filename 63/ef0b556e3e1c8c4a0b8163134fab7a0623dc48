@@ -1,0 +1,19 @@
+LICENSE
+  s_4572bc90c64f5e::t_eb9bd2403ca3ea 1-21
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "63ef0b556e3e1c8c4a0b8163134fab7a0623dc48",
+  "prompts": {},
+  "sessions": {
+    "s_4572bc90c64f5e": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_11a518433ffewTJCh1xGRLFnZg",
+        "model": "deepseek-v4-pro"
+      },
+      "human_author": "liufree <liufreeo@gmail.com>"
+    }
+  }
+}
