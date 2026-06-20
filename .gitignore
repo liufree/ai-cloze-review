@@ -1,0 +1,5 @@
+node_modules/
+.mdc-docs/
+.vscode/
+*.log
+.DS_Store

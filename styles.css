@@ -1,0 +1,386 @@
+/* ===== Cloze Elements ===== */
+
+.cloze-blank {
+	display: inline;
+	border-radius: 3px;
+	padding: 0 4px;
+	margin: 0 1px;
+	transition: all 0.15s ease;
+}
+
+.cloze-blank .cloze-answer {
+	display: inline;
+	background-color: rgba(var(--color-yellow-rgb, 255, 200, 0), 0.2);
+	border-radius: 3px;
+	padding: 0 3px;
+}
+
+.cloze-blank .cloze-placeholder {
+	display: none;
+}
+
+/* Review mode active - hide answers */
+.cloze-review-active .cloze-blank:not(.cloze-revealed) {
+	cursor: pointer;
+}
+
+.cloze-review-active .cloze-blank:not(.cloze-revealed) .cloze-answer {
+	display: none;
+}
+
+.cloze-review-active .cloze-blank:not(.cloze-revealed) .cloze-placeholder {
+	display: inline;
+	background-color: var(--background-modifier-border);
+	color: var(--text-muted);
+	border: 1px dashed var(--background-modifier-border-hover);
+	border-radius: 3px;
+	padding: 0 8px;
+	min-width: 40px;
+	font-size: 0.85em;
+	letter-spacing: 1px;
+}
+
+.cloze-review-active .cloze-blank:not(.cloze-revealed):hover .cloze-placeholder {
+	background-color: var(--background-modifier-border-hover);
+	border-color: var(--text-accent);
+	color: var(--text-normal);
+}
+
+/* Revealed cloze */
+.cloze-blank.cloze-revealed .cloze-answer {
+	background-color: rgba(var(--color-green-rgb, 0, 200, 0), 0.2);
+	color: var(--text-normal);
+	font-weight: 500;
+}
+
+.cloze-blank.cloze-revealed .cloze-placeholder {
+	display: none;
+}
+
+.cloze-blank.cloze-revealed {
+	cursor: default;
+}
+
+/* ===== Bottom Toolbar ===== */
+
+.has-cloze-toolbar .markdown-preview-view,
+.has-cloze-toolbar .markdown-source-view .cm-sizer {
+	padding-bottom: 52px;
+}
+
+.cloze-review-toolbar {
+	display: grid;
+	grid-template-columns: 1fr auto 1fr;
+	align-items: center;
+	gap: 8px;
+	padding: 6px 16px;
+	background-color: var(--background-secondary);
+	border-top: 1px solid var(--background-modifier-border);
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	z-index: 100;
+	min-height: 44px;
+	box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.cloze-toolbar-left {
+	justify-self: start;
+}
+
+.cloze-toolbar-center {
+	justify-self: center;
+}
+
+.cloze-toolbar-group {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.cloze-toolbar-btn {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 5px 12px;
+	border: 1px solid var(--background-modifier-border);
+	border-radius: 6px;
+	background-color: var(--background-primary);
+	color: var(--text-normal);
+	font-size: 13px;
+	cursor: pointer;
+	transition: all 0.15s ease;
+	white-space: nowrap;
+}
+
+.cloze-toolbar-btn:hover {
+	background-color: var(--background-modifier-hover);
+	border-color: var(--interactive-accent);
+}
+
+.cloze-toolbar-btn:active {
+	transform: scale(0.96);
+}
+
+.cloze-toolbar-btn.active {
+	background-color: var(--interactive-accent);
+	color: var(--text-on-accent);
+	border-color: var(--interactive-accent);
+}
+
+.cloze-toolbar-btn.active:hover {
+	background-color: var(--interactive-accent-hover);
+}
+
+.cloze-btn-icon {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 16px;
+	height: 16px;
+}
+
+.cloze-btn-icon svg {
+	width: 16px;
+	height: 16px;
+}
+
+.cloze-btn-icon-only {
+	padding: 5px 8px;
+}
+
+.cloze-btn-icon-only svg {
+	width: 16px;
+	height: 16px;
+}
+
+.cloze-toolbar-status {
+	font-size: 12px;
+	color: var(--text-muted);
+	padding: 0 8px;
+	white-space: nowrap;
+}
+
+.cloze-toolbar-status.reviewing {
+	color: var(--interactive-accent);
+	font-weight: 500;
+}
+
+/* ===== Settings Tab ===== */
+
+.cloze-review-hint {
+	margin-top: 20px;
+	padding: 12px 16px;
+	background-color: var(--background-secondary);
+	border-radius: 6px;
+	font-size: 13px;
+	color: var(--text-muted);
+}
+
+.cloze-review-hint code {
+	background-color: var(--background-modifier-border);
+	padding: 1px 6px;
+	border-radius: 3px;
+	font-size: 12px;
+	color: var(--text-normal);
+}
+
+.cloze-review-hint ul {
+	margin: 6px 0;
+	padding-left: 20px;
+}
+
+.cloze-review-hint li {
+	margin: 2px 0;
+}
+
+/* ===== Loading Spinner ===== */
+
+.cloze-btn-spinner {
+	display: inline-block;
+	width: 14px;
+	height: 14px;
+	border: 2px solid var(--text-muted);
+	border-top-color: transparent;
+	border-radius: 50%;
+	animation: cloze-spin 0.6s linear infinite;
+}
+
+@keyframes cloze-spin {
+	to { transform: rotate(360deg); }
+}
+
+.cloze-toolbar-btn.is-loading {
+	opacity: 0.7;
+	cursor: wait;
+}
+
+.cloze-toolbar-status.generating {
+	color: var(--color-orange, #e67e22);
+}
+
+/* ===== Cloze Overlay ===== */
+
+.cloze-overlay {
+	width: 100%;
+}
+
+.markdown-preview-view.is-readable-line-width .cloze-overlay.markdown-preview-sizer {
+	max-width: var(--file-line-width, 700px);
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.cloze-overlay .markdown-preview-pusher {
+	width: 1px;
+	height: 0.1px;
+	margin-bottom: 0px;
+}
+
+/* ===== Responsive (Mobile) ===== */
+
+@media (max-width: 600px) {
+	.cloze-overlay {
+		padding: 0 var(--size-4-4, 16px);
+	}
+
+	.cloze-review-toolbar {
+		padding: 4px 8px;
+		min-height: 40px;
+		grid-template-columns: auto auto;
+		justify-content: space-between;
+		gap: 4px;
+	}
+
+	.cloze-toolbar-left {
+		justify-self: start;
+	}
+
+	.cloze-toolbar-center {
+		justify-self: end;
+	}
+
+	.cloze-toolbar-btn .cloze-btn-label {
+		display: none;
+	}
+
+	.cloze-toolbar-btn {
+		padding: 8px 12px;
+	}
+
+	.cloze-btn-icon-only {
+		padding: 8px;
+	}
+
+	.cloze-btn-icon svg,
+	.cloze-btn-icon-only svg {
+		width: 20px;
+		height: 20px;
+	}
+
+	.cloze-toolbar-status {
+		font-size: 11px;
+		padding: 0 4px;
+		max-width: 80px;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.cloze-btn-spinner {
+		width: 18px;
+		height: 18px;
+	}
+
+	.cloze-review-active .cloze-blank:not(.cloze-revealed) .cloze-placeholder {
+		min-width: 32px;
+		padding: 0 6px;
+		font-size: 0.8em;
+	}
+
+	.cloze-blank {
+		padding: 0 2px;
+	}
+
+	.cloze-blank .cloze-answer {
+		padding: 0 2px;
+	}
+}
+
+.is-mobile .cloze-overlay {
+	padding: 0 var(--size-4-4, 16px);
+}
+
+.is-mobile .cloze-review-toolbar {
+	padding: 4px 8px;
+	min-height: 40px;
+	grid-template-columns: auto auto;
+	justify-content: space-between;
+	gap: 4px;
+}
+
+.is-mobile .cloze-toolbar-left {
+	justify-self: start;
+}
+
+.is-mobile .cloze-toolbar-center {
+	justify-self: end;
+}
+
+.is-mobile .cloze-toolbar-btn .cloze-btn-label {
+	display: none;
+}
+
+.is-mobile .cloze-toolbar-btn {
+	padding: 8px 12px;
+}
+
+.is-mobile .cloze-btn-icon-only {
+	padding: 8px;
+}
+
+.is-mobile .cloze-btn-icon svg,
+.is-mobile .cloze-btn-icon-only svg {
+	width: 20px;
+	height: 20px;
+}
+
+.is-mobile .cloze-toolbar-status {
+	font-size: 11px;
+	padding: 0 4px;
+	max-width: 80px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.is-mobile .cloze-btn-spinner {
+	width: 18px;
+	height: 18px;
+}
+
+.is-mobile .cloze-review-active .cloze-blank:not(.cloze-revealed) .cloze-placeholder {
+	min-width: 32px;
+	padding: 0 6px;
+	font-size: 0.8em;
+}
+
+.is-mobile .cloze-blank {
+	padding: 0 2px;
+}
+
+.is-mobile .cloze-blank .cloze-answer {
+	padding: 0 2px;
+}
+
+@media (max-width: 400px) {
+	.cloze-toolbar-status {
+		font-size: 10px;
+		max-width: 50px;
+	}
+
+	.cloze-toolbar-btn {
+		padding: 6px 10px;
+	}
+}
