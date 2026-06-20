@@ -1,0 +1,30 @@
+src/review-mode.ts
+  s_0f56842d74de77::t_9d8b3af092fbfc 106,131
+  s_0f56842d74de77::t_c533c2a635060a 32,39,51
+  s_0f56842d74de77::t_c7e0eae31ab312 250
+src/settings.ts
+  s_0f56842d74de77::t_51388948708040 28
+  s_0f56842d74de77::t_f1671d86a59ab5 3,6
+main.ts
+  s_0f56842d74de77::t_862f542e4e3eac 7,17-24,30,44,50,56,94,99,112,119,127,132,144,154
+src/toolbar.ts
+  s_0f56842d74de77::t_401ba275c5f037 53
+src/ai-service.ts
+  s_0f56842d74de77::t_188c0e765dd674 75,100,118
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "4866efe77893d418e501bd4427f86c2934ff358b",
+  "prompts": {},
+  "sessions": {
+    "s_0f56842d74de77": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_11c727adbffeDlc2Rwxq2YtMzC",
+        "model": "glm-latest"
+      },
+      "human_author": "liufree <liufreeo@gmail.com>"
+    }
+  }
+}
