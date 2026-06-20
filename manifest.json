@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "minAppVersion": "1.0.0",
   "description": "AI-powered cloze deletion review - generate fill-in-the-blank content and review interactively.",
-  "author": "OpenCode",
+  "author": "liufree",
   "authorUrl": "https://github.com/liufree",
   "isDesktopOnly": false
 }
