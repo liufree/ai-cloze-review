@@ -1,0 +1,21 @@
+README.md
+  s_0f56842d74de77::t_fb426a0d1446ab 1-87
+.gitignore
+  s_0f56842d74de77::t_17a92af1aaef80 1-5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "9f8fb3e7b0bd01ff12e423af4e0e71d37e82cf59",
+  "prompts": {},
+  "sessions": {
+    "s_0f56842d74de77": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_11c727adbffeDlc2Rwxq2YtMzC",
+        "model": "glm-latest"
+      },
+      "human_author": "liufree <liufreeo@gmail.com>"
+    }
+  }
+}
