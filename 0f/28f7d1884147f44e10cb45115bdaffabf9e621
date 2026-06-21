@@ -1,0 +1,27 @@
+README.zh.md
+  s_e85bfc764178da::t_1059d0255e7028 34-35
+  s_e85bfc764178da::t_079814d5f32cff 28-33
+main.ts
+  s_e85bfc764178da::t_3d73f32db81cac 24-25,28-34
+main.js
+  s_e85bfc764178da::t_70bad68a1f06b1 994,997-998,1000-1009,1032-1044
+README.md
+  s_e85bfc764178da::t_7cbe474c354f39 28-33
+  s_e85bfc764178da::t_4068fb1e5dbb4f 34-35
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "0f28f7d1884147f44e10cb45115bdaffabf9e621",
+  "prompts": {},
+  "sessions": {
+    "s_e85bfc764178da": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_1176c0ec1ffeuVBDliracWh9Uj",
+        "model": "glm-latest"
+      },
+      "human_author": "liufree <liufreeo@gmail.com>"
+    }
+  }
+}
