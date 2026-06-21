@@ -1,6 +1,6 @@
 {
   "name": "ai-cloze-review",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "AI-powered cloze deletion review for Obsidian",
   "main": "main.js",
   "scripts": {
