@@ -40,7 +40,7 @@ export class ClozeParser {
 	}
 
 	stripClozes(text: string): string {
-		return text.replace(CLOZE_REGEX, (_match, _id, content) => {
+		return text.replace(CLOZE_REGEX, (_match: string, _id: string, content: string) => {
 			const parts = content.split('::');
 			return parts[0].trim();
 		});

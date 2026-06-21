@@ -57,7 +57,7 @@ var ClozeReviewSettingTab = class extends import_obsidian.PluginSettingTab {
     const { containerEl } = this;
     containerEl.empty();
     const t = this.plugin.t;
-    containerEl.createEl("h3", { text: t.language });
+    new import_obsidian.Setting(containerEl).setName(t.language).setHeading();
     new import_obsidian.Setting(containerEl).setName(t.language).setDesc(t.languageDesc).addDropdown(
       (dropdown) => dropdown.addOption("auto", t.languageDesc).addOption("zh", t.chinese).addOption("en", t.english).setValue(this.plugin.settings.lang).onChange(async (value) => {
         this.plugin.settings.lang = value;
@@ -66,7 +66,7 @@ var ClozeReviewSettingTab = class extends import_obsidian.PluginSettingTab {
         this.display();
       })
     );
-    containerEl.createEl("h3", { text: t.aiConfig });
+    new import_obsidian.Setting(containerEl).setName(t.aiConfig).setHeading();
     new import_obsidian.Setting(containerEl).setName(t.apiEndpoint).setDesc(t.apiEndpointDesc).addText(
       (text) => text.setPlaceholder("https://api.openai.com/v1/chat/completions").setValue(this.plugin.settings.apiEndpoint).onChange(async (value) => {
         this.plugin.settings.apiEndpoint = value;
@@ -102,12 +102,12 @@ var ClozeReviewSettingTab = class extends import_obsidian.PluginSettingTab {
       })
     );
     new import_obsidian.Setting(containerEl).setName(t.temperature).setDesc(t.temperatureDesc).addSlider(
-      (slider) => slider.setLimits(0, 1, 0.1).setValue(this.plugin.settings.temperature).setDynamicTooltip().onChange(async (value) => {
+      (slider) => slider.setLimits(0, 1, 0.1).setValue(this.plugin.settings.temperature).onChange(async (value) => {
         this.plugin.settings.temperature = value;
         await this.plugin.saveSettings();
       })
     );
-    containerEl.createEl("h3", { text: t.clozeSettings });
+    new import_obsidian.Setting(containerEl).setName(t.clozeSettings).setHeading();
     new import_obsidian.Setting(containerEl).setName(t.difficulty).setDesc(t.difficultyDesc).addDropdown(
       (dropdown) => dropdown.addOption("easy", t.easy).addOption("medium", t.medium).addOption("hard", t.hard).addOption("extreme", t.extreme).setValue(this.plugin.settings.difficulty).onChange(async (value) => {
         this.plugin.settings.difficulty = value;
@@ -126,18 +126,20 @@ var ClozeReviewSettingTab = class extends import_obsidian.PluginSettingTab {
         await this.plugin.saveSettings();
       });
       text.inputEl.rows = 10;
-      text.inputEl.style.width = "100%";
+      text.inputEl.setCssProps({ width: "100%" });
     });
     const hintEl = containerEl.createEl("div", { cls: "cloze-review-hint" });
-    hintEl.innerHTML = `
-			<p><strong>${t.clozeSyntax}\uFF1A</strong></p>
-			<ul>
-				<li><code>{{c1::\u5185\u5BB9}}</code> - ${t.basicCloze}</li>
-				<li><code>{{c1::\u5185\u5BB9::\u63D0\u793A}}</code> - ${t.hintCloze}</li>
-			</ul>
-			<p>${t.autoCalc}</p>
-			<p>${t.readingDesc}</p>
-		`;
+    const syntaxP = hintEl.createEl("p");
+    syntaxP.createEl("strong", { text: `${t.clozeSyntax}\uFF1A` });
+    const ul = hintEl.createEl("ul");
+    const li1 = ul.createEl("li");
+    li1.createEl("code", { text: "{{c1::\u5185\u5BB9}}" });
+    li1.createEl("span", { text: ` - ${t.basicCloze}` });
+    const li2 = ul.createEl("li");
+    li2.createEl("code", { text: "{{c1::\u5185\u5BB9::\u63D0\u793A}}" });
+    li2.createEl("span", { text: ` - ${t.hintCloze}` });
+    hintEl.createEl("p", { text: t.autoCalc });
+    hintEl.createEl("p", { text: t.readingDesc });
   }
 };
 
@@ -197,7 +199,7 @@ var AIService = class {
     if (response.status >= 400) {
       let errorMsg = `API ${response.status}`;
       try {
-        const errorJson = typeof response.json === "string" ? JSON.parse(response.json) : response.json;
+        const errorJson = response.json;
         if ((_a = errorJson == null ? void 0 : errorJson.error) == null ? void 0 : _a.message) {
           errorMsg += `: ${errorJson.error.message}`;
         }
@@ -282,7 +284,7 @@ ${chunk}`;
     if (response.status >= 400) {
       let errorMsg = `API ${response.status}`;
       try {
-        const errorJson = typeof response.json === "string" ? JSON.parse(response.json) : response.json;
+        const errorJson = response.json;
         if ((_a = errorJson == null ? void 0 : errorJson.error) == null ? void 0 : _a.message) {
           errorMsg += `: ${errorJson.error.message}`;
         }
@@ -387,7 +389,7 @@ var ReviewMode = class {
     }
     if (view.getMode() !== "preview") {
       await view.setState({ mode: "preview" }, {});
-      await new Promise((r) => setTimeout(r, 500));
+      await new Promise((r) => window.setTimeout(r, 500));
     }
     await this.showClozeOverlay(view, clozeContent);
     this.applyReviewClass(view);
@@ -402,16 +404,16 @@ var ReviewMode = class {
     const frontmatter = (originalSizer == null ? void 0 : originalSizer.querySelector(".metadata-container, .frontmatter-container")) || previewEl.querySelector(":scope > .metadata-container, :scope > .frontmatter-container");
     const inlineTitle = (originalSizer == null ? void 0 : originalSizer.querySelector(".inline-title")) || previewEl.querySelector(":scope > .inline-title");
     if (originalSizer) {
-      originalSizer.style.display = "none";
+      originalSizer.setCssProps({ display: "none" });
     }
     let overlay = previewEl.querySelector(".cloze-overlay");
     if (!overlay) {
-      overlay = document.createElement("div");
+      overlay = previewEl.ownerDocument.createElement("div");
       overlay.className = "markdown-preview-sizer markdown-preview-section cloze-overlay";
       previewEl.appendChild(overlay);
     }
     overlay.innerHTML = "";
-    const pusher = document.createElement("div");
+    const pusher = previewEl.ownerDocument.createElement("div");
     pusher.className = "markdown-preview-pusher";
     overlay.appendChild(pusher);
     if (inlineTitle) {
@@ -420,9 +422,10 @@ var ReviewMode = class {
     if (frontmatter) {
       overlay.appendChild(frontmatter.cloneNode(true));
     }
-    const contentDiv = document.createElement("div");
+    const contentDiv = previewEl.ownerDocument.createElement("div");
     overlay.appendChild(contentDiv);
-    await import_obsidian3.MarkdownRenderer.renderMarkdown(
+    await import_obsidian3.MarkdownRenderer.render(
+      this.plugin.app,
       content,
       contentDiv,
       view.file.path,
@@ -438,7 +441,7 @@ var ReviewMode = class {
       overlay.remove();
     const originalSizer = previewEl.querySelector(".markdown-preview-sizer:not(.cloze-overlay)");
     if (originalSizer) {
-      originalSizer.style.display = "";
+      originalSizer.setCssProps({ display: "" });
     }
   }
   deactivate(silent = false) {
@@ -519,7 +522,7 @@ var ReviewMode = class {
       return;
     if (!el.closest(".cloze-overlay"))
       return;
-    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
+    const walker = el.ownerDocument.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
       acceptNode(node2) {
         const parent = node2.parentElement;
         if (!parent)
@@ -554,19 +557,19 @@ var ReviewMode = class {
     while ((match = regex.exec(text)) !== null) {
       hasMatch = true;
       if (match.index > lastIndex) {
-        fragments.push(document.createTextNode(text.slice(lastIndex, match.index)));
+        fragments.push(textNode.ownerDocument.createTextNode(text.slice(lastIndex, match.index)));
       }
       const content = match[2];
       const parts = content.split("::");
       const answer = parts[0].trim();
       const hint = parts.length > 1 ? parts.slice(1).join("::").trim() : null;
-      const clozeEl = this.createClozeElement(answer, hint);
+      const clozeEl = this.createClozeElement(answer, hint, textNode.ownerDocument);
       fragments.push(clozeEl);
       lastIndex = regex.lastIndex;
     }
     if (hasMatch) {
       if (lastIndex < text.length) {
-        fragments.push(document.createTextNode(text.slice(lastIndex)));
+        fragments.push(textNode.ownerDocument.createTextNode(text.slice(lastIndex)));
       }
       const parent = textNode.parentElement;
       if (!parent)
@@ -577,14 +580,14 @@ var ReviewMode = class {
       parent.removeChild(textNode);
     }
   }
-  createClozeElement(answer, hint) {
-    const el = document.createElement("span");
+  createClozeElement(answer, hint, doc) {
+    const el = doc.createElement("span");
     el.className = "cloze-blank";
-    const answerSpan = document.createElement("span");
+    const answerSpan = doc.createElement("span");
     answerSpan.className = "cloze-answer";
     answerSpan.textContent = answer;
     el.appendChild(answerSpan);
-    const placeholderSpan = document.createElement("span");
+    const placeholderSpan = doc.createElement("span");
     placeholderSpan.className = "cloze-placeholder";
     placeholderSpan.textContent = hint ? `[${hint}]` : this.plugin.t.placeholder;
     el.appendChild(placeholderSpan);
@@ -605,7 +608,7 @@ var ReviewMode = class {
       this.hideClozeOverlay(view);
       this.removeReviewClass(view);
     }
-    document.querySelectorAll(".cloze-review-active").forEach((el) => {
+    activeDocument.querySelectorAll(".cloze-review-active").forEach((el) => {
       el.classList.remove("cloze-review-active");
     });
   }
@@ -634,7 +637,7 @@ var BottomToolbar = class {
     });
   }
   update() {
-    const leaf = this.app.workspace.activeLeaf;
+    const leaf = this.app.workspace.getLeaf();
     if (!leaf || leaf.view.getViewType() !== "markdown") {
       this.hide();
       return;
@@ -647,18 +650,18 @@ var BottomToolbar = class {
     const container = view.containerEl;
     container.classList.add("has-cloze-toolbar");
     this.containerEl = container;
-    const toolbar = document.createElement("div");
+    const toolbar = container.ownerDocument.createElement("div");
     toolbar.className = "cloze-review-toolbar";
-    this.leftGroup = document.createElement("div");
+    this.leftGroup = container.ownerDocument.createElement("div");
     this.leftGroup.className = "cloze-toolbar-group cloze-toolbar-left";
-    this.statusEl = document.createElement("span");
+    this.statusEl = container.ownerDocument.createElement("span");
     this.statusEl.className = "cloze-toolbar-status";
     this.statusEl.textContent = this.plugin.t.ready;
     this.leftGroup.appendChild(this.statusEl);
     this.leftGroup.appendChild(this.createIconButton("settings", () => {
       this.plugin.openSettings();
     }));
-    this.centerGroup = document.createElement("div");
+    this.centerGroup = container.ownerDocument.createElement("div");
     this.centerGroup.className = "cloze-toolbar-group cloze-toolbar-center";
     toolbar.appendChild(this.leftGroup);
     toolbar.appendChild(this.centerGroup);
@@ -698,11 +701,11 @@ var BottomToolbar = class {
       }));
     } else {
       this.centerGroup.appendChild(this.createButton(t.aiGenerate, "sparkles", () => {
-        this.plugin.generateCloze();
+        void this.plugin.generateCloze();
       }));
       if (hasCache) {
         this.centerGroup.appendChild(this.createButton(t.startReview, "play", () => {
-          this.plugin.startReview();
+          void this.plugin.startReview();
         }));
       }
     }
@@ -737,11 +740,13 @@ var BottomToolbar = class {
     }
   }
   createButton(label, iconName, onClick, disabled = false) {
-    const btn = document.createElement("button");
+    var _a, _b;
+    const doc = (_b = (_a = this.toolbarEl) == null ? void 0 : _a.ownerDocument) != null ? _b : activeDocument;
+    const btn = doc.createElement("button");
     btn.className = "cloze-toolbar-btn";
     if (iconName === "loader") {
       btn.classList.add("is-loading");
-      const spinner = document.createElement("span");
+      const spinner = doc.createElement("span");
       spinner.className = "cloze-btn-spinner";
       btn.appendChild(spinner);
     } else {
@@ -762,7 +767,9 @@ var BottomToolbar = class {
     return btn;
   }
   createIconButton(iconName, onClick) {
-    const btn = document.createElement("button");
+    var _a, _b;
+    const doc = (_b = (_a = this.toolbarEl) == null ? void 0 : _a.ownerDocument) != null ? _b : activeDocument;
+    const btn = doc.createElement("button");
     btn.className = "cloze-toolbar-btn cloze-btn-icon-only";
     const icon = (0, import_obsidian4.getIcon)(iconName);
     if (icon)
@@ -1024,7 +1031,7 @@ var ClozeReviewPlugin = class extends import_obsidian5.Plugin {
         if (this.reviewMode.isActive()) {
           this.reviewMode.deactivate();
         } else {
-          this.startReview();
+          void this.startReview();
         }
         this.toolbar.refresh();
       }
@@ -1048,9 +1055,10 @@ var ClozeReviewPlugin = class extends import_obsidian5.Plugin {
           this.reviewMode.deactivate(true);
           const view = this.getMarkdownView();
           if (view && view.file && this.clozeCache.has(view.file.path)) {
-            setTimeout(async () => {
-              await this.reviewMode.activate(true);
-              this.toolbar.refresh();
+            window.setTimeout(() => {
+              void this.reviewMode.activate(true).then(() => {
+                this.toolbar.refresh();
+              });
             }, 500);
             return;
           }
@@ -1118,7 +1126,7 @@ var ClozeReviewPlugin = class extends import_obsidian5.Plugin {
         const stillOnSameNote = currentView && currentView.file && currentView.file.path === filePath;
         if (stillOnSameNote) {
           if (this.reviewMode.isActive()) {
-            await this.reviewMode.deactivate();
+            this.reviewMode.deactivate();
           }
           await this.reviewMode.activate();
         }
@@ -1156,8 +1164,8 @@ var ClozeReviewPlugin = class extends import_obsidian5.Plugin {
   onunload() {
     this.reviewMode.destroy();
     this.toolbar.destroy();
-    document.querySelectorAll(".cloze-review-toolbar").forEach((el) => el.remove());
-    document.querySelectorAll(".cloze-review-active").forEach((el) => {
+    activeDocument.querySelectorAll(".cloze-review-toolbar").forEach((el) => el.remove());
+    activeDocument.querySelectorAll(".cloze-review-active").forEach((el) => {
       el.classList.remove("cloze-review-active");
     });
   }

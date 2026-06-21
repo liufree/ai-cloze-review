@@ -2,6 +2,20 @@ import { requestUrl } from 'obsidian';
 import type { ClozeReviewSettings } from './settings';
 import type { Locale } from './i18n';
 
+interface AIResponse {
+	choices?: Array<{
+		message?: {
+			content?: string;
+		};
+	}>;
+}
+
+interface AIErrorResponse {
+	error?: {
+		message?: string;
+	};
+}
+
 const DIFFICULTY_DENSITY: Record<string, number> = {
 	easy: 250,
 	medium: 120,
@@ -56,7 +70,7 @@ export class AIService {
 		if (response.status >= 400) {
 			let errorMsg = `API ${response.status}`;
 			try {
-				const errorJson = typeof response.json === 'string' ? JSON.parse(response.json) : response.json;
+				const errorJson = response.json as AIErrorResponse;
 				if (errorJson?.error?.message) {
 					errorMsg += `: ${errorJson.error.message}`;
 				}
@@ -113,7 +127,7 @@ export class AIService {
 		return chunks;
 	}
 
-	private async callAPI(systemMessage: string, userMessage: string): Promise<any> {
+	private async callAPI(systemMessage: string, userMessage: string): Promise<AIResponse> {
 		if (!this.settings.apiKey) {
 			throw new Error('API key not configured');
 		}
@@ -142,7 +156,7 @@ export class AIService {
 		if (response.status >= 400) {
 			let errorMsg = `API ${response.status}`;
 			try {
-				const errorJson = typeof response.json === 'string' ? JSON.parse(response.json) : response.json;
+				const errorJson = response.json as AIErrorResponse;
 				if (errorJson?.error?.message) {
 					errorMsg += `: ${errorJson.error.message}`;
 				}
@@ -152,10 +166,10 @@ export class AIService {
 			throw new Error(errorMsg);
 		}
 
-		return response.json;
+		return response.json as AIResponse;
 	}
 
-	private extractContent(response: any): string {
+	private extractContent(response: AIResponse): string {
 		const content = response?.choices?.[0]?.message?.content;
 		if (!content) {
 			throw new Error('Empty AI response');

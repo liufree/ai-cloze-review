@@ -43,7 +43,7 @@ export class ReviewMode {
 
 		if (view.getMode() !== 'preview') {
 			await view.setState({ mode: 'preview' }, {});
-			await new Promise((r) => setTimeout(r, 500));
+			await new Promise((r) => window.setTimeout(r, 500));
 		}
 
 		await this.showClozeOverlay(view, clozeContent);
@@ -61,18 +61,18 @@ export class ReviewMode {
 		const inlineTitle = (originalSizer?.querySelector('.inline-title') || previewEl.querySelector(':scope > .inline-title')) as HTMLElement;
 
 		if (originalSizer) {
-			originalSizer.style.display = 'none';
+			originalSizer.setCssProps({ display: 'none' });
 		}
 
 		let overlay = previewEl.querySelector('.cloze-overlay') as HTMLElement;
 		if (!overlay) {
-			overlay = document.createElement('div');
+			overlay = previewEl.ownerDocument.createElement('div');
 			overlay.className = 'markdown-preview-sizer markdown-preview-section cloze-overlay';
 			previewEl.appendChild(overlay);
 		}
 		overlay.innerHTML = '';
 
-		const pusher = document.createElement('div');
+		const pusher = previewEl.ownerDocument.createElement('div');
 		pusher.className = 'markdown-preview-pusher';
 		overlay.appendChild(pusher);
 
@@ -84,10 +84,11 @@ export class ReviewMode {
 			overlay.appendChild(frontmatter.cloneNode(true));
 		}
 
-		const contentDiv = document.createElement('div');
+		const contentDiv = previewEl.ownerDocument.createElement('div');
 		overlay.appendChild(contentDiv);
 
-		await MarkdownRenderer.renderMarkdown(
+		await MarkdownRenderer.render(
+			this.plugin.app,
 			content,
 			contentDiv,
 			view.file!.path,
@@ -104,7 +105,7 @@ export class ReviewMode {
 
 		const originalSizer = previewEl.querySelector('.markdown-preview-sizer:not(.cloze-overlay)') as HTMLElement;
 		if (originalSizer) {
-			originalSizer.style.display = '';
+			originalSizer.setCssProps({ display: '' });
 		}
 	}
 
@@ -184,7 +185,7 @@ export class ReviewMode {
 		if (!this.active) return;
 		if (!el.closest('.cloze-overlay')) return;
 
-		const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
+		const walker = el.ownerDocument.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
 			acceptNode(node: Text): number {
 				const parent = node.parentElement;
 				if (!parent) return NodeFilter.FILTER_REJECT;
@@ -222,7 +223,7 @@ export class ReviewMode {
 		while ((match = regex.exec(text)) !== null) {
 			hasMatch = true;
 			if (match.index > lastIndex) {
-				fragments.push(document.createTextNode(text.slice(lastIndex, match.index)));
+				fragments.push(textNode.ownerDocument.createTextNode(text.slice(lastIndex, match.index)));
 			}
 
 			const content = match[2];
@@ -230,14 +231,14 @@ export class ReviewMode {
 			const answer = parts[0].trim();
 			const hint = parts.length > 1 ? parts.slice(1).join('::').trim() : null;
 
-			const clozeEl = this.createClozeElement(answer, hint);
+			const clozeEl = this.createClozeElement(answer, hint, textNode.ownerDocument);
 			fragments.push(clozeEl);
 			lastIndex = regex.lastIndex;
 		}
 
 		if (hasMatch) {
 			if (lastIndex < text.length) {
-				fragments.push(document.createTextNode(text.slice(lastIndex)));
+				fragments.push(textNode.ownerDocument.createTextNode(text.slice(lastIndex)));
 			}
 			const parent = textNode.parentElement;
 			if (!parent) return;
@@ -248,16 +249,16 @@ export class ReviewMode {
 		}
 	}
 
-	private createClozeElement(answer: string, hint: string | null): HTMLElement {
-		const el = document.createElement('span');
+	private createClozeElement(answer: string, hint: string | null, doc: Document): HTMLElement {
+		const el = doc.createElement('span');
 		el.className = 'cloze-blank';
 
-		const answerSpan = document.createElement('span');
+		const answerSpan = doc.createElement('span');
 		answerSpan.className = 'cloze-answer';
 		answerSpan.textContent = answer;
 		el.appendChild(answerSpan);
 
-		const placeholderSpan = document.createElement('span');
+		const placeholderSpan = doc.createElement('span');
 		placeholderSpan.className = 'cloze-placeholder';
 		placeholderSpan.textContent = hint ? `[${hint}]` : this.plugin.t.placeholder;
 		el.appendChild(placeholderSpan);
@@ -281,7 +282,7 @@ export class ReviewMode {
 			this.hideClozeOverlay(view);
 			this.removeReviewClass(view);
 		}
-		document.querySelectorAll('.cloze-review-active').forEach((el) => {
+		activeDocument.querySelectorAll('.cloze-review-active').forEach((el) => {
 			el.classList.remove('cloze-review-active');
 		});
 	}

@@ -178,6 +178,8 @@ export function detectLanguage(): Lang {
 	try {
 		const lang = navigator.language?.toLowerCase();
 		if (lang && (lang.startsWith('zh') || lang.includes('cn'))) return 'zh';
-	} catch {}
+	} catch {
+		// navigator.language not available, default to English
+	}
 	return 'en';
 }

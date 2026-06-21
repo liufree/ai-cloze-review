@@ -1,4 +1,4 @@
-import { App, MarkdownView, WorkspaceLeaf, Notice, getIcon } from 'obsidian';
+import { App, MarkdownView, WorkspaceLeaf, getIcon } from 'obsidian';
 import type ClozeReviewPlugin from '../main';
 
 export class BottomToolbar {
@@ -26,7 +26,7 @@ export class BottomToolbar {
 	}
 
 	private update(): void {
-		const leaf = this.app.workspace.activeLeaf;
+		const leaf = this.app.workspace.getLeaf();
 		if (!leaf || leaf.view.getViewType() !== 'markdown') {
 			this.hide();
 			return;
@@ -42,13 +42,13 @@ export class BottomToolbar {
 		container.classList.add('has-cloze-toolbar');
 		this.containerEl = container;
 
-		const toolbar = document.createElement('div');
+		const toolbar = container.ownerDocument.createElement('div');
 		toolbar.className = 'cloze-review-toolbar';
 
-		this.leftGroup = document.createElement('div');
+		this.leftGroup = container.ownerDocument.createElement('div');
 		this.leftGroup.className = 'cloze-toolbar-group cloze-toolbar-left';
 
-		this.statusEl = document.createElement('span');
+		this.statusEl = container.ownerDocument.createElement('span');
 		this.statusEl.className = 'cloze-toolbar-status';
 		this.statusEl.textContent = this.plugin.t.ready;
 		this.leftGroup.appendChild(this.statusEl);
@@ -57,7 +57,7 @@ export class BottomToolbar {
 			this.plugin.openSettings();
 		}));
 
-		this.centerGroup = document.createElement('div');
+		this.centerGroup = container.ownerDocument.createElement('div');
 		this.centerGroup.className = 'cloze-toolbar-group cloze-toolbar-center';
 
 		toolbar.appendChild(this.leftGroup);
@@ -103,12 +103,12 @@ export class BottomToolbar {
 			}));
 		} else {
 			this.centerGroup.appendChild(this.createButton(t.aiGenerate, 'sparkles', () => {
-				this.plugin.generateCloze();
+				void this.plugin.generateCloze();
 			}));
 
 			if (hasCache) {
 				this.centerGroup.appendChild(this.createButton(t.startReview, 'play', () => {
-					this.plugin.startReview();
+					void this.plugin.startReview();
 				}));
 			}
 		}
@@ -147,12 +147,13 @@ export class BottomToolbar {
 	}
 
 	private createButton(label: string, iconName: string, onClick: () => void, disabled = false): HTMLElement {
-		const btn = document.createElement('button');
+		const doc = this.toolbarEl?.ownerDocument ?? activeDocument;
+		const btn = doc.createElement('button');
 		btn.className = 'cloze-toolbar-btn';
 
 		if (iconName === 'loader') {
 			btn.classList.add('is-loading');
-			const spinner = document.createElement('span');
+			const spinner = doc.createElement('span');
 			spinner.className = 'cloze-btn-spinner';
 			btn.appendChild(spinner);
 		} else {
@@ -176,7 +177,8 @@ export class BottomToolbar {
 	}
 
 	private createIconButton(iconName: string, onClick: () => void): HTMLElement {
-		const btn = document.createElement('button');
+		const doc = this.toolbarEl?.ownerDocument ?? activeDocument;
+		const btn = doc.createElement('button');
 		btn.className = 'cloze-toolbar-btn cloze-btn-icon-only';
 
 		const icon = getIcon(iconName);

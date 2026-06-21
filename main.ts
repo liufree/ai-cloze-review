@@ -1,4 +1,4 @@
-import { Plugin, MarkdownView, Notice, TFile } from 'obsidian';
+import { Plugin, MarkdownView, Notice } from 'obsidian';
 import { ClozeReviewSettings, DEFAULT_SETTINGS, ClozeReviewSettingTab } from './src/settings';
 import { AIService } from './src/ai-service';
 import { ClozeParser } from './src/cloze-parser';
@@ -26,7 +26,7 @@ export default class ClozeReviewPlugin extends Plugin {
 	}
 
 	private refreshCommands(): void {
-		const commands = (this.app as any).commands;
+		const commands = (this.app as { commands: { commands: Record<string, unknown>; editorCommands: Record<string, unknown> } }).commands;
 		if (!commands) return;
 		for (const id of ['ai-cloze-review:ai-generate-cloze', 'ai-cloze-review:start-review', 'ai-cloze-review:toggle-review-mode']) {
 			if (commands.commands[id]) delete commands.commands[id];
@@ -52,7 +52,7 @@ export default class ClozeReviewPlugin extends Plugin {
 				if (this.reviewMode.isActive()) {
 					this.reviewMode.deactivate();
 				} else {
-					this.startReview();
+					void this.startReview();
 				}
 				this.toolbar.refresh();
 			},
@@ -81,10 +81,11 @@ export default class ClozeReviewPlugin extends Plugin {
 					this.reviewMode.deactivate(true);
 					const view = this.getMarkdownView();
 					if (view && view.file && this.clozeCache.has(view.file.path)) {
-						setTimeout(async () => {
-							await this.reviewMode.activate(true);
+						window.setTimeout(() => {
+						void this.reviewMode.activate(true).then(() => {
 							this.toolbar.refresh();
-						}, 500);
+						});
+					}, 500);
 						return;
 					}
 				}
@@ -167,7 +168,7 @@ export default class ClozeReviewPlugin extends Plugin {
 				const stillOnSameNote = currentView && currentView.file && currentView.file.path === filePath;
 				if (stillOnSameNote) {
 					if (this.reviewMode.isActive()) {
-						await this.reviewMode.deactivate();
+						this.reviewMode.deactivate();
 					}
 					await this.reviewMode.activate();
 				}
@@ -191,12 +192,14 @@ export default class ClozeReviewPlugin extends Plugin {
 	}
 
 	openSettings(): void {
-		(this.app as any).setting.open();
-		(this.app as any).setting.openTabById('ai-cloze-review');
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+		(this.app as { setting: { open: () => void; openTabById: (id: string) => void } }).setting.open();
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+		(this.app as { setting: { open: () => void; openTabById: (id: string) => void } }).setting.openTabById('ai-cloze-review');
 	}
 
 	async loadSettings(): Promise<void> {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData() as Partial<ClozeReviewSettings>);
 	}
 
 	async saveSettings(): Promise<void> {
@@ -207,8 +210,8 @@ export default class ClozeReviewPlugin extends Plugin {
 	onunload(): void {
 		this.reviewMode.destroy();
 		this.toolbar.destroy();
-		document.querySelectorAll('.cloze-review-toolbar').forEach((el) => el.remove());
-		document.querySelectorAll('.cloze-review-active').forEach((el) => {
+		activeDocument.querySelectorAll('.cloze-review-toolbar').forEach((el) => el.remove());
+		activeDocument.querySelectorAll('.cloze-review-active').forEach((el) => {
 			el.classList.remove('cloze-review-active');
 		});
 	}

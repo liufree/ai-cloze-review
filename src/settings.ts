@@ -1,6 +1,6 @@
 import { App, PluginSettingTab, Setting, Notice } from 'obsidian';
 import type ClozeReviewPlugin from '../main';
-import { detectLanguage, type Lang } from './i18n';
+import { type Lang } from './i18n';
 
 export interface ClozeReviewSettings {
 	lang: 'auto' | Lang;
@@ -38,7 +38,7 @@ export class ClozeReviewSettingTab extends PluginSettingTab {
 
 		const t = this.plugin.t;
 
-		containerEl.createEl('h3', { text: t.language });
+		new Setting(containerEl).setName(t.language).setHeading();
 		new Setting(containerEl)
 			.setName(t.language)
 			.setDesc(t.languageDesc)
@@ -56,7 +56,7 @@ export class ClozeReviewSettingTab extends PluginSettingTab {
 					})
 			);
 
-		containerEl.createEl('h3', { text: t.aiConfig });
+		new Setting(containerEl).setName(t.aiConfig).setHeading();
 
 		new Setting(containerEl)
 			.setName(t.apiEndpoint)
@@ -123,14 +123,13 @@ export class ClozeReviewSettingTab extends PluginSettingTab {
 				slider
 					.setLimits(0, 1, 0.1)
 					.setValue(this.plugin.settings.temperature)
-					.setDynamicTooltip()
 					.onChange(async (value) => {
 						this.plugin.settings.temperature = value;
 						await this.plugin.saveSettings();
 					})
 			);
 
-		containerEl.createEl('h3', { text: t.clozeSettings });
+		new Setting(containerEl).setName(t.clozeSettings).setHeading();
 
 		new Setting(containerEl)
 			.setName(t.difficulty)
@@ -172,18 +171,20 @@ export class ClozeReviewSettingTab extends PluginSettingTab {
 						await this.plugin.saveSettings();
 					});
 				text.inputEl.rows = 10;
-				text.inputEl.style.width = '100%';
+				text.inputEl.setCssProps({ width: '100%' });
 			});
 
 		const hintEl = containerEl.createEl('div', { cls: 'cloze-review-hint' });
-		hintEl.innerHTML = `
-			<p><strong>${t.clozeSyntax}：</strong></p>
-			<ul>
-				<li><code>{{c1::内容}}</code> - ${t.basicCloze}</li>
-				<li><code>{{c1::内容::提示}}</code> - ${t.hintCloze}</li>
-			</ul>
-			<p>${t.autoCalc}</p>
-			<p>${t.readingDesc}</p>
-		`;
+		const syntaxP = hintEl.createEl('p');
+		syntaxP.createEl('strong', { text: `${t.clozeSyntax}：` });
+		const ul = hintEl.createEl('ul');
+		const li1 = ul.createEl('li');
+		li1.createEl('code', { text: '{{c1::内容}}' });
+		li1.createEl('span', { text: ` - ${t.basicCloze}` });
+		const li2 = ul.createEl('li');
+		li2.createEl('code', { text: '{{c1::内容::提示}}' });
+		li2.createEl('span', { text: ` - ${t.hintCloze}` });
+		hintEl.createEl('p', { text: t.autoCalc });
+		hintEl.createEl('p', { text: t.readingDesc });
 	}
 }
