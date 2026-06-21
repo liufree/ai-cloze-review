@@ -192,10 +192,9 @@ export default class ClozeReviewPlugin extends Plugin {
 	}
 
 	openSettings(): void {
-		// `setting` is not exposed on the public App type; cast to access internal API
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- `setting` is not exposed on the public App type
 		(this.app as { setting: { open: () => void; openTabById: (id: string) => void } }).setting.open();
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- `setting` is not exposed on the public App type
 		(this.app as { setting: { open: () => void; openTabById: (id: string) => void } }).setting.openTabById('ai-cloze-review');
 	}
 
