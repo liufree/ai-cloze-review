@@ -1,0 +1,43 @@
+manifest.json
+  s_e85bfc764178da::t_b5995411a35e22 4
+main.ts
+  s_e85bfc764178da::t_8a3eab0d6dcad6 137-142
+  s_e85bfc764178da::t_662d29233e73df 144
+main.js
+  s_e85bfc764178da::t_3145a2109b72c4 59-62,69-70,76,83,104,110-112,117,123,133,135-136,138-139,152,155,157,159,161,649,666,671,677,688,693,697,707,709,723
+  s_e85bfc764178da::t_b3a19288c0da23 808,891,1083-1084
+  s_e85bfc764178da::t_18a91da721521b 88-102,171-209,865-870,948-953
+  s_e85bfc764178da::t_1849f5529b06c7 124,153-154,156,158,160,162-163,216-217,219-220,226,232-233,728,847-864,930-947,1089
+src/i18n.ts
+  s_e85bfc764178da::t_257746f3d09751 21
+  s_e85bfc764178da::t_0d985244e00634 104
+  s_e85bfc764178da::t_f5c5d229e74997 144-161
+  s_e85bfc764178da::t_a83324ba9420cf 79-83,162-166
+src/toolbar.ts
+  s_e85bfc764178da::t_0bf6cac9da3f8b 53
+src/ai-service.ts
+  s_e85bfc764178da::t_7e8b522d669867 3,12-19
+  s_e85bfc764178da::t_91292f40813480 28-69
+  s_e85bfc764178da::t_73974a1b610519 76-77,79,81-82,89-90
+src/settings.ts
+  s_e85bfc764178da::t_fda69e4cdba34c 1,99-115
+  s_e85bfc764178da::t_db06fcf1d5a126 168
+package.json
+  s_e85bfc764178da::t_67f70e1c843924 3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "86d2b4df63196dafd28ad2a87526cfcffbc1d268",
+  "prompts": {},
+  "sessions": {
+    "s_e85bfc764178da": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_1176c0ec1ffeuVBDliracWh9Uj",
+        "model": "glm-latest"
+      },
+      "human_author": "liufree <liufreeo@gmail.com>"
+    }
+  }
+}
