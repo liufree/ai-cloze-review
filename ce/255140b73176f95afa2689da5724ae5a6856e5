@@ -1,0 +1,21 @@
+main.ts
+  s_720715d490a604::t_a81c4e8f3c4a18 195,197
+manifest.json
+  s_720715d490a604::t_fffe0e04483941 4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "ce255140b73176f95afa2689da5724ae5a6856e5",
+  "prompts": {},
+  "sessions": {
+    "s_720715d490a604": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_11565da62ffeg0yyOHTJBFLH1l",
+        "model": "deepseek-v4-pro"
+      },
+      "human_author": "liufree <liufreeo@gmail.com>"
+    }
+  }
+}
