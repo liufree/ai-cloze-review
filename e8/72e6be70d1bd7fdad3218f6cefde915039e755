@@ -1,0 +1,26 @@
+main.ts
+  s_720715d490a604::t_2daf4ffa1eae04 195
+src/review-mode.ts
+  s_720715d490a604::t_16b36da642945e 95
+manifest.json
+  s_720715d490a604::t_706214e594c8f9 5
+  s_720715d490a604::t_0aeb6c555516b5 4
+src/settings.ts
+  s_720715d490a604::t_01e5306ccc439f 35-37
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "e872e6be70d1bd7fdad3218f6cefde915039e755",
+  "prompts": {},
+  "sessions": {
+    "s_720715d490a604": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_11565da62ffeg0yyOHTJBFLH1l",
+        "model": "deepseek-v4-pro"
+      },
+      "human_author": "liufree <liufreeo@gmail.com>"
+    }
+  }
+}
