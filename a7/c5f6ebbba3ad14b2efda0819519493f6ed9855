@@ -1,0 +1,77 @@
+manifest.json
+  s_e3af199ef55356::t_7ef371d2463faf 4
+  s_e3af199ef55356::t_9eb36cac473089 5
+src/review-mode.ts
+  s_e3af199ef55356::t_67a3b29d323764 188
+  s_e3af199ef55356::t_1a63e9fa7a0871 69,75
+  s_e3af199ef55356::t_ef00056a97ce6f 108
+  s_e3af199ef55356::t_26c20ff10fbefd 241
+  s_e3af199ef55356::t_ee3c24de88830a 46
+  s_e3af199ef55356::t_545a6a69802c97 234
+  s_e3af199ef55356::t_f0f11ab364db67 87
+  s_e3af199ef55356::t_2281b621bb5459 261
+  s_e3af199ef55356::t_8cb55740385593 64
+  s_e3af199ef55356::t_862a9719aa7511 90-91
+  s_e3af199ef55356::t_4fe6f0b327c2d6 252-253,256
+  s_e3af199ef55356::t_27277acf93a239 285
+  s_e3af199ef55356::t_ed333a63fe4e47 226
+src/ai-service.ts
+  s_e3af199ef55356::t_c1e62b22a89cd1 159,169
+  s_e3af199ef55356::t_772b48e046aee4 172
+  s_e3af199ef55356::t_7df5926fd765e0 5-17
+  s_e3af199ef55356::t_e30f7a0a3cc631 18
+  s_e3af199ef55356::t_2dee189b59634e 73
+  s_e3af199ef55356::t_522305b95947db 130
+main.js
+  s_e3af199ef55356::t_c213059029075a 60,69,105,110,129,132-142,202,287,392,407,411,416,425,427-428,444,525,560,566,572,583-584,586,590,611,640,653,655,657,664,704,708,743-745,749,770-772,1034,1058-1061,1129,1167-1168
+package.json
+  s_e3af199ef55356::t_c7dd3f24e57792 3
+src/toolbar.ts
+  s_e3af199ef55356::t_470290d428e141 29
+  s_e3af199ef55356::t_b8cfe58f12ba9d 45,48,51
+  s_e3af199ef55356::t_55bfdf89cded28 60
+  s_e3af199ef55356::t_e689be5800e017 180-181
+  s_e3af199ef55356::t_5b3c29033c13ae 1
+  s_e3af199ef55356::t_da296df1060588 150-151,156
+  s_e3af199ef55356::t_749a66d1a9a0eb 106,111
+.github/workflows/release.yml
+  s_e3af199ef55356::t_d8fd48b6065317 1-33
+src/i18n.ts
+  s_e3af199ef55356::t_514beb1313ba74 181-183
+main.ts
+  s_e3af199ef55356::t_8cc07d012863dc 213-214
+  s_e3af199ef55356::t_3c3762c7487dd9 202
+  s_e3af199ef55356::t_129f6ef664d523 171
+  s_e3af199ef55356::t_4de2fd88611bd2 84-85,87-88
+  s_e3af199ef55356::t_3027ca3eaf2605 29
+  s_e3af199ef55356::t_c6640c0b46fa47 195-198
+  s_e3af199ef55356::t_fe2a57b9c1b74b 1
+  s_e3af199ef55356::t_f57b961a90de8d 55
+src/settings.ts
+  s_e3af199ef55356::t_e26721fd64b542 132
+  s_e3af199ef55356::t_88ccffe1f95910 59
+  s_e3af199ef55356::t_e6cfb4f75db07b 174
+  s_e3af199ef55356::t_4775a2e6d6d955 3
+  s_e3af199ef55356::t_54015f113d99d3 178-188
+  s_e3af199ef55356::t_9527e82625a1c2 41
+src/cloze-parser.ts
+  s_e3af199ef55356::t_d55d65ffb6d8f3 43
+esbuild.config.mjs
+  s_e3af199ef55356::t_a4bb0a65e34b02 3-10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "a7c5f6ebbba3ad14b2efda0819519493f6ed9855",
+  "prompts": {},
+  "sessions": {
+    "s_e3af199ef55356": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_1157908ceffeAWk27DnLhvAvoK",
+        "model": "deepseek-v4-pro"
+      },
+      "human_author": "liufree <liufreeo@gmail.com>"
+    }
+  }
+}
