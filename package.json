@@ -1,13 +1,20 @@
 {
   "name": "ai-cloze-review",
-  "version": "1.0.4",
+  "version": "1.0.7",
   "description": "AI-powered cloze deletion review for Obsidian",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs",
     "build": "node esbuild.config.mjs production"
   },
-  "keywords": ["obsidian", "plugin", "cloze", "review", "ai", "spaced-repetition"],
+  "keywords": [
+    "obsidian",
+    "plugin",
+    "cloze",
+    "review",
+    "ai",
+    "spaced-repetition"
+  ],
   "devDependencies": {
     "@types/node": "^20.0.0",
     "esbuild": "^0.20.0",
