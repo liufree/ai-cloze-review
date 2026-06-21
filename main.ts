@@ -134,8 +134,14 @@ export default class ClozeReviewPlugin extends Plugin {
 				return;
 			}
 
+			if (!this.settings.model) {
+				new Notice(this.t.configModel);
+				this.openSettings();
+				return;
+			}
+
 			this.aiService.updateSettings(this.settings);
-			const result = await this.aiService.generateCloze(content, this.settings.customPrompt);
+			const result = await this.aiService.generateCloze(content, this.settings.customPrompt, this._t);
 
 			this.clozeCache.set(view.file.path, result);
 

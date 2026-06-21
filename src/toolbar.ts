@@ -50,7 +50,7 @@ export class BottomToolbar {
 
 		this.statusEl = document.createElement('span');
 		this.statusEl.className = 'cloze-toolbar-status';
-		this.statusEl.textContent = t.ready;
+		this.statusEl.textContent = this.plugin.t.ready;
 		this.leftGroup.appendChild(this.statusEl);
 
 		this.leftGroup.appendChild(this.createIconButton('settings', () => {
@@ -141,7 +141,7 @@ export class BottomToolbar {
 			}
 			this.statusEl.classList.remove('reviewing', 'generating');
 		} else {
-			this.statusEl.textContent = t.ready;
+		this.statusEl.textContent = this.plugin.t.ready;
 			this.statusEl.classList.remove('reviewing', 'generating');
 		}
 	}

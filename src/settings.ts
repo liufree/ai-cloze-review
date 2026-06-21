@@ -1,4 +1,4 @@
-import { App, PluginSettingTab, Setting } from 'obsidian';
+import { App, PluginSettingTab, Setting, Notice } from 'obsidian';
 import type ClozeReviewPlugin from '../main';
 import { detectLanguage, type Lang } from './i18n';
 
@@ -12,17 +12,6 @@ export interface ClozeReviewSettings {
 	temperature: number;
 	autoEnterReview: boolean;
 }
-
-export const DEFAULT_PROMPT = `你是一个学习辅助工具。请分析以下笔记内容，识别其中的重点内容（如关键概念、定义、术语、日期、数字、公式、人名、地名、核心论点等），并将这些重要内容用挖空格式 {{c1::内容}} 包裹起来。
-
-要求：
-1. 只对值得记忆的重要信息进行挖空，不要过度挖空
-2. 每个挖空应该是一个完整的、有意义的内容片段
-3. 保持原文结构和格式不变，只添加挖空标记
-4. 对于需要提示的内容，可以使用 {{c1::内容::提示}} 格式
-5. 挖空数量适中，重点突出
-6. 不要对标题、列表标记、链接等结构元素进行挖空
-7. 直接返回修改后的完整内容，不要添加任何额外说明或解释`;
 
 export const DEFAULT_SETTINGS: ClozeReviewSettings = {
 	lang: 'auto',
@@ -107,6 +96,24 @@ export class ClozeReviewSettingTab extends PluginSettingTab {
 						this.plugin.settings.model = value;
 						await this.plugin.saveSettings();
 					})
+			)
+			.addButton((button) =>
+				button
+					.setButtonText(t.testConnection)
+					.onClick(async () => {
+						this.plugin.aiService.updateSettings(this.plugin.settings);
+						button.setButtonText(t.testing);
+						button.setDisabled(true);
+						try {
+							await this.plugin.aiService.testConnection();
+							new Notice(t.testSuccess);
+						} catch (e) {
+							new Notice(t.testFailed + (e as Error).message, 5000);
+						} finally {
+							button.setButtonText(t.testConnection);
+							button.setDisabled(false);
+						}
+					})
 			);
 
 		new Setting(containerEl)
@@ -158,7 +165,7 @@ export class ClozeReviewSettingTab extends PluginSettingTab {
 			.setDesc(t.customPromptDesc)
 			.addTextArea((text) => {
 				text
-					.setPlaceholder(DEFAULT_PROMPT)
+					.setPlaceholder(this.plugin.t.defaultPrompt)
 					.setValue(this.plugin.settings.customPrompt)
 					.onChange(async (value) => {
 						this.plugin.settings.customPrompt = value;
