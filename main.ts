@@ -21,23 +21,17 @@ export default class ClozeReviewPlugin extends Plugin {
 	updateLang(): void {
 		const lang = this.settings.lang === 'auto' ? detectLanguage() : this.settings.lang;
 		this._t = getLocale(lang);
+		this.refreshCommands();
+		this.toolbar?.refresh();
 	}
 
-	async onload(): Promise<void> {
-		await this.loadSettings();
-		this.addSettingTab(new ClozeReviewSettingTab(this.app, this));
-
-		this.updateLang();
-		this.aiService = new AIService(this.settings);
-		this.clozeParser = new ClozeParser();
-		this.reviewMode = new ReviewMode(this.app, this);
-		this.toolbar = new BottomToolbar(this.app, this);
-
-		this.registerMarkdownPostProcessor((el, _ctx) => {
-			this.reviewMode.processElement(el);
-		});
-
-		this.toolbar.init();
+	private refreshCommands(): void {
+		const commands = (this.app as any).commands;
+		if (!commands) return;
+		for (const id of ['ai-cloze-review:ai-generate-cloze', 'ai-cloze-review:start-review', 'ai-cloze-review:toggle-review-mode']) {
+			if (commands.commands[id]) delete commands.commands[id];
+			if (commands.editorCommands[id]) delete commands.editorCommands[id];
+		}
 
 		this.addCommand({
 			id: 'ai-generate-cloze',
@@ -63,6 +57,23 @@ export default class ClozeReviewPlugin extends Plugin {
 				this.toolbar.refresh();
 			},
 		});
+	}
+
+	async onload(): Promise<void> {
+		await this.loadSettings();
+		this.addSettingTab(new ClozeReviewSettingTab(this.app, this));
+
+		this.updateLang();
+		this.aiService = new AIService(this.settings);
+		this.clozeParser = new ClozeParser();
+		this.reviewMode = new ReviewMode(this.app, this);
+		this.toolbar = new BottomToolbar(this.app, this);
+
+		this.registerMarkdownPostProcessor((el, _ctx) => {
+			this.reviewMode.processElement(el);
+		});
+
+		this.toolbar.init();
 
 		this.registerEvent(
 			this.app.workspace.on('active-leaf-change', () => {

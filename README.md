@@ -25,6 +25,14 @@ AI-powered cloze deletion review for Obsidian. One-click AI analysis generates f
 5. Use **Reveal** to show all, **Reset** to hide all again
 6. Click **Exit** to restore the original note view
 
+## Screenshots
+
+![Review Mode](docs/en/PixPin_2026-06-21_14-04-36.png)
+
+![AI Cloze Generation](docs/en/PixPin_2026-06-21_13-42-35.png)
+
+![Settings](docs/en/PixPin_2026-06-21_14-08-09.png)
+
 ## Cloze Syntax
 
 ```

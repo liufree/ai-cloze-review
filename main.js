@@ -991,21 +991,22 @@ var ClozeReviewPlugin = class extends import_obsidian5.Plugin {
     return this._t;
   }
   updateLang() {
+    var _a;
     const lang = this.settings.lang === "auto" ? detectLanguage() : this.settings.lang;
     this._t = getLocale(lang);
+    this.refreshCommands();
+    (_a = this.toolbar) == null ? void 0 : _a.refresh();
   }
-  async onload() {
-    await this.loadSettings();
-    this.addSettingTab(new ClozeReviewSettingTab(this.app, this));
-    this.updateLang();
-    this.aiService = new AIService(this.settings);
-    this.clozeParser = new ClozeParser();
-    this.reviewMode = new ReviewMode(this.app, this);
-    this.toolbar = new BottomToolbar(this.app, this);
-    this.registerMarkdownPostProcessor((el, _ctx) => {
-      this.reviewMode.processElement(el);
-    });
-    this.toolbar.init();
+  refreshCommands() {
+    const commands = this.app.commands;
+    if (!commands)
+      return;
+    for (const id of ["ai-cloze-review:ai-generate-cloze", "ai-cloze-review:start-review", "ai-cloze-review:toggle-review-mode"]) {
+      if (commands.commands[id])
+        delete commands.commands[id];
+      if (commands.editorCommands[id])
+        delete commands.editorCommands[id];
+    }
     this.addCommand({
       id: "ai-generate-cloze",
       name: this.t.cmdAiGenerate,
@@ -1028,6 +1029,19 @@ var ClozeReviewPlugin = class extends import_obsidian5.Plugin {
         this.toolbar.refresh();
       }
     });
+  }
+  async onload() {
+    await this.loadSettings();
+    this.addSettingTab(new ClozeReviewSettingTab(this.app, this));
+    this.updateLang();
+    this.aiService = new AIService(this.settings);
+    this.clozeParser = new ClozeParser();
+    this.reviewMode = new ReviewMode(this.app, this);
+    this.toolbar = new BottomToolbar(this.app, this);
+    this.registerMarkdownPostProcessor((el, _ctx) => {
+      this.reviewMode.processElement(el);
+    });
+    this.toolbar.init();
     this.registerEvent(
       this.app.workspace.on("active-leaf-change", () => {
         if (this.reviewMode.isActive()) {
