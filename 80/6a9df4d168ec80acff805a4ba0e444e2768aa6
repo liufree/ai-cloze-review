@@ -1,0 +1,21 @@
+package.json
+  s_e85bfc764178da::t_e159c6e942cad0 3
+manifest.json
+  s_e85bfc764178da::t_10e3478e777c02 4
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.5.7",
+  "base_commit_sha": "806a9df4d168ec80acff805a4ba0e444e2768aa6",
+  "prompts": {},
+  "sessions": {
+    "s_e85bfc764178da": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_1176c0ec1ffeuVBDliracWh9Uj",
+        "model": "glm-latest"
+      },
+      "human_author": "liufree <liufreeo@gmail.com>"
+    }
+  }
+}
