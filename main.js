@@ -224,18 +224,17 @@ ${difficultyHint}
 ${clozeHint}
 
 ${locale.systemSuffix}`;
-    const chunks = this.splitContent(content, 3e3);
+    const chunks = this.splitContent(content, 6e3);
     const chunkTarget = Math.round(targetCount / chunks.length);
-    const results = [];
-    for (let i = 0; i < chunks.length; i++) {
+    const promises = chunks.map((chunk, i) => {
       const chunkHint = chunks.length > 1 ? `
 ${locale.chunkHint.replace("{0}", String(chunkTarget))}` : "";
       const userMessage = `${locale.userMessagePrefix}${chunkHint}
 
-${chunks[i]}`;
-      const response = await this.callAPI(systemMessage, userMessage);
-      results.push(this.extractContent(response));
-    }
+${chunk}`;
+      return this.callAPI(systemMessage, userMessage).then((resp) => this.extractContent(resp));
+    });
+    const results = await Promise.all(promises);
     return results.join("\n\n");
   }
   splitContent(content, maxLen) {
@@ -268,7 +267,7 @@ ${chunks[i]}`;
         { role: "user", content: userMessage }
       ],
       temperature: this.settings.temperature,
-      max_tokens: 8192
+      max_tokens: 4096
     });
     const response = await (0, import_obsidian2.requestUrl)({
       url: this.settings.apiEndpoint,
@@ -400,6 +399,8 @@ var ReviewMode = class {
     if (!previewEl)
       return;
     const originalSizer = previewEl.querySelector(".markdown-preview-sizer:not(.cloze-overlay)");
+    const frontmatter = (originalSizer == null ? void 0 : originalSizer.querySelector(".metadata-container, .frontmatter-container")) || previewEl.querySelector(":scope > .metadata-container, :scope > .frontmatter-container");
+    const inlineTitle = (originalSizer == null ? void 0 : originalSizer.querySelector(".inline-title")) || previewEl.querySelector(":scope > .inline-title");
     if (originalSizer) {
       originalSizer.style.display = "none";
     }
@@ -413,6 +414,12 @@ var ReviewMode = class {
     const pusher = document.createElement("div");
     pusher.className = "markdown-preview-pusher";
     overlay.appendChild(pusher);
+    if (inlineTitle) {
+      overlay.appendChild(inlineTitle.cloneNode(true));
+    }
+    if (frontmatter) {
+      overlay.appendChild(frontmatter.cloneNode(true));
+    }
     const contentDiv = document.createElement("div");
     overlay.appendChild(contentDiv);
     await import_obsidian3.MarkdownRenderer.renderMarkdown(
@@ -1064,6 +1071,7 @@ var ClozeReviewPlugin = class extends import_obsidian5.Plugin {
       new import_obsidian5.Notice(this.t.openNoteFirst);
       return;
     }
+    const filePath = view.file.path;
     this.generating = true;
     this.toolbar.refresh();
     const notice = new import_obsidian5.Notice(this.t.aiGeneratingTitle, 0);
@@ -1087,15 +1095,19 @@ var ClozeReviewPlugin = class extends import_obsidian5.Plugin {
       }
       this.aiService.updateSettings(this.settings);
       const result = await this.aiService.generateCloze(content, this.settings.customPrompt, this._t);
-      this.clozeCache.set(view.file.path, result);
+      this.clozeCache.set(filePath, result);
       notice.hide();
       const clozeCount = this.clozeParser.count(result);
       new import_obsidian5.Notice(`${this.t.generated} ${clozeCount} ${this.t.clozesCount}`);
       if (this.settings.autoEnterReview) {
-        if (this.reviewMode.isActive()) {
-          await this.reviewMode.deactivate();
+        const currentView = this.getMarkdownView();
+        const stillOnSameNote = currentView && currentView.file && currentView.file.path === filePath;
+        if (stillOnSameNote) {
+          if (this.reviewMode.isActive()) {
+            await this.reviewMode.deactivate();
+          }
+          await this.reviewMode.activate();
         }
-        await this.reviewMode.activate();
       }
     } catch (e) {
       notice.hide();

@@ -113,6 +113,8 @@ export default class ClozeReviewPlugin extends Plugin {
 			return;
 		}
 
+		const filePath = view.file.path;
+
 		this.generating = true;
 		this.toolbar.refresh();
 
@@ -143,17 +145,21 @@ export default class ClozeReviewPlugin extends Plugin {
 			this.aiService.updateSettings(this.settings);
 			const result = await this.aiService.generateCloze(content, this.settings.customPrompt, this._t);
 
-			this.clozeCache.set(view.file.path, result);
+			this.clozeCache.set(filePath, result);
 
 			notice.hide();
 			const clozeCount = this.clozeParser.count(result);
 			new Notice(`${this.t.generated} ${clozeCount} ${this.t.clozesCount}`);
 
 			if (this.settings.autoEnterReview) {
-				if (this.reviewMode.isActive()) {
-					await this.reviewMode.deactivate();
+				const currentView = this.getMarkdownView();
+				const stillOnSameNote = currentView && currentView.file && currentView.file.path === filePath;
+				if (stillOnSameNote) {
+					if (this.reviewMode.isActive()) {
+						await this.reviewMode.deactivate();
+					}
+					await this.reviewMode.activate();
 				}
-				await this.reviewMode.activate();
 			}
 		} catch (e) {
 			notice.hide();

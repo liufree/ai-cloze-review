@@ -81,17 +81,16 @@ export class AIService {
 		const basePrompt = customPrompt || locale.defaultPrompt;
 		const systemMessage = `${basePrompt}\n\n${difficultyHint}\n${clozeHint}\n\n${locale.systemSuffix}`;
 
-		const chunks = this.splitContent(content, 3000);
+		const chunks = this.splitContent(content, 6000);
 		const chunkTarget = Math.round(targetCount / chunks.length);
-		const results: string[] = [];
 
-		for (let i = 0; i < chunks.length; i++) {
+		const promises = chunks.map((chunk, i) => {
 			const chunkHint = chunks.length > 1 ? `\n${locale.chunkHint.replace('{0}', String(chunkTarget))}` : '';
-			const userMessage = `${locale.userMessagePrefix}${chunkHint}\n\n${chunks[i]}`;
-			const response = await this.callAPI(systemMessage, userMessage);
-			results.push(this.extractContent(response));
-		}
+			const userMessage = `${locale.userMessagePrefix}${chunkHint}\n\n${chunk}`;
+			return this.callAPI(systemMessage, userMessage).then(resp => this.extractContent(resp));
+		});
 
+		const results = await Promise.all(promises);
 		return results.join('\n\n');
 	}
 
@@ -126,7 +125,7 @@ export class AIService {
 				{ role: 'user', content: userMessage },
 			],
 			temperature: this.settings.temperature,
-			max_tokens: 8192,
+			max_tokens: 4096,
 		});
 
 		const response = await requestUrl({

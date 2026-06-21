@@ -56,6 +56,10 @@ export class ReviewMode {
 		if (!previewEl) return;
 
 		const originalSizer = previewEl.querySelector('.markdown-preview-sizer:not(.cloze-overlay)') as HTMLElement;
+
+		const frontmatter = (originalSizer?.querySelector('.metadata-container, .frontmatter-container') || previewEl.querySelector(':scope > .metadata-container, :scope > .frontmatter-container')) as HTMLElement;
+		const inlineTitle = (originalSizer?.querySelector('.inline-title') || previewEl.querySelector(':scope > .inline-title')) as HTMLElement;
+
 		if (originalSizer) {
 			originalSizer.style.display = 'none';
 		}
@@ -71,6 +75,14 @@ export class ReviewMode {
 		const pusher = document.createElement('div');
 		pusher.className = 'markdown-preview-pusher';
 		overlay.appendChild(pusher);
+
+		if (inlineTitle) {
+			overlay.appendChild(inlineTitle.cloneNode(true));
+		}
+
+		if (frontmatter) {
+			overlay.appendChild(frontmatter.cloneNode(true));
+		}
 
 		const contentDiv = document.createElement('div');
 		overlay.appendChild(contentDiv);
