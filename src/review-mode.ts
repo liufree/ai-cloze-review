@@ -92,7 +92,7 @@ export class ReviewMode {
 			content,
 			contentDiv,
 			view.file!.path,
-			this.plugin
+			view
 		);
 	}
 

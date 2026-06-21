@@ -32,6 +32,9 @@ export class ClozeReviewSettingTab extends PluginSettingTab {
 		this.plugin = plugin;
 	}
 
+	// `display()` is deprecated since 1.13.0 in favor of `getSettingDefinitions`,
+	// but `getSettingDefinitions` requires minAppVersion >= 1.13.0.
+	// eslint-disable-next-line obsidianmd/no-unsupported-api
 	display(): void {
 		const { containerEl } = this;
 		containerEl.empty();
