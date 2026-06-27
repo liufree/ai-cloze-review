@@ -5,6 +5,7 @@ import { ClozeParser } from './src/cloze-parser';
 import { ReviewMode } from './src/review-mode';
 import { BottomToolbar } from './src/toolbar';
 import { getLocale, detectLanguage, type Locale } from './src/i18n';
+import { PROVIDER_PRESETS } from './src/providers';
 
 export default class ClozeReviewPlugin extends Plugin {
 	settings: ClozeReviewSettings;
@@ -199,7 +200,43 @@ export default class ClozeReviewPlugin extends Plugin {
 	}
 
 	async loadSettings(): Promise<void> {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData() as Partial<ClozeReviewSettings>);
+		const data = await this.loadData() as Partial<ClozeReviewSettings>;
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, data);
+
+		if (!data?.provider && data?.apiEndpoint) {
+			const detected = this.detectProvider(data.apiEndpoint);
+			if (detected) {
+				this.settings.provider = detected;
+			}
+		}
+
+		if (!data?.apiFormat && this.settings.provider) {
+			const preset = PROVIDER_PRESETS[this.settings.provider];
+			if (preset) {
+				this.settings.apiFormat = preset.apiFormat;
+			}
+		}
+
+		if (this.settings.apiEndpoint?.endsWith('/chat/completions')) {
+			this.settings.apiEndpoint = this.settings.apiEndpoint.replace(/\/chat\/completions$/, '');
+		}
+	}
+
+	private detectProvider(endpoint: string): string | null {
+		for (const [id, preset] of Object.entries({
+			openai: 'api.openai.com',
+			anthropic: 'api.anthropic.com',
+			deepseek: 'api.deepseek.com',
+			zhipu: 'open.bigmodel.cn',
+			moonshot: 'api.moonshot.cn',
+			ollama: 'localhost:11434',
+			groq: 'api.groq.com',
+			openrouter: 'openrouter.ai',
+			siliconflow: 'api.siliconflow.cn',
+		})) {
+			if (endpoint.includes(preset)) return id;
+		}
+		return null;
 	}
 
 	async saveSettings(): Promise<void> {

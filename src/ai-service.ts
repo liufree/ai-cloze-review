@@ -1,20 +1,8 @@
-import { requestUrl } from 'obsidian';
+import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 import type { ClozeReviewSettings } from './settings';
 import type { Locale } from './i18n';
-
-interface AIResponse {
-	choices?: Array<{
-		message?: {
-			content?: string;
-		};
-	}>;
-}
-
-interface AIErrorResponse {
-	error?: {
-		message?: string;
-	};
-}
+import type { ApiFormat } from './providers';
 
 const DIFFICULTY_DENSITY: Record<string, number> = {
 	easy: 250,
@@ -33,10 +21,40 @@ function getDifficultyHint(difficulty: string, t: Locale): string {
 }
 
 export class AIService {
-	constructor(private settings: ClozeReviewSettings) {}
+	private settings: ClozeReviewSettings;
+	private openaiClient: OpenAI;
+	private anthropicClient: Anthropic;
+
+	constructor(settings: ClozeReviewSettings) {
+		this.settings = settings;
+		this.openaiClient = this.createOpenAIClient();
+		this.anthropicClient = this.createAnthropicClient();
+	}
+
+	private createOpenAIClient(): OpenAI {
+		return new OpenAI({
+			baseURL: this.settings.apiEndpoint,
+			apiKey: this.settings.apiKey || 'placeholder',
+			dangerouslyAllowBrowser: true,
+		});
+	}
+
+	private createAnthropicClient(): Anthropic {
+		return new Anthropic({
+			baseURL: this.settings.apiEndpoint,
+			apiKey: this.settings.apiKey || 'placeholder',
+			dangerouslyAllowBrowser: true,
+		});
+	}
 
 	updateSettings(settings: ClozeReviewSettings): void {
 		this.settings = settings;
+		this.openaiClient = this.createOpenAIClient();
+		this.anthropicClient = this.createAnthropicClient();
+	}
+
+	private get format(): ApiFormat {
+		return this.settings.apiFormat || 'openai';
 	}
 
 	async testConnection(): Promise<void> {
@@ -50,34 +68,24 @@ export class AIService {
 			throw new Error('No model');
 		}
 
-		const body = JSON.stringify({
-			model: this.settings.model,
-			messages: [{ role: 'user', content: 'Hi' }],
-			max_tokens: 5,
-		});
-
-		const response = await requestUrl({
-			url: this.settings.apiEndpoint,
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'Authorization': `Bearer ${this.settings.apiKey}`,
-			},
-			body,
-			throw: false,
-		});
-
-		if (response.status >= 400) {
-			let errorMsg = `API ${response.status}`;
-			try {
-				const errorJson = response.json as AIErrorResponse;
-				if (errorJson?.error?.message) {
-					errorMsg += `: ${errorJson.error.message}`;
-				}
-			} catch {
-				if (response.text) errorMsg += `: ${response.text.slice(0, 200)}`;
+		if (this.format === 'anthropic') {
+			const response = await this.anthropicClient.messages.create({
+				model: this.settings.model,
+				max_tokens: 5,
+				messages: [{ role: 'user', content: 'Hi' }],
+			});
+			if (!response.content?.[0]?.type) {
+				throw new Error('Empty response from API');
 			}
-			throw new Error(errorMsg);
+		} else {
+			const response = await this.openaiClient.chat.completions.create({
+				model: this.settings.model,
+				messages: [{ role: 'user', content: 'Hi' }],
+				max_tokens: 5,
+			});
+			if (!response.choices?.[0]?.message?.content) {
+				throw new Error('Empty response from API');
+			}
 		}
 	}
 
@@ -127,12 +135,25 @@ export class AIService {
 		return chunks;
 	}
 
-	private async callAPI(systemMessage: string, userMessage: string): Promise<AIResponse> {
+	private async callAPI(
+		systemMessage: string,
+		userMessage: string,
+	): Promise<unknown> {
 		if (!this.settings.apiKey) {
 			throw new Error('API key not configured');
 		}
 
-		const body = JSON.stringify({
+		if (this.format === 'anthropic') {
+			return this.anthropicClient.messages.create({
+				model: this.settings.model,
+				max_tokens: 4096,
+				temperature: this.settings.temperature,
+				system: systemMessage,
+				messages: [{ role: 'user', content: userMessage }],
+			});
+		}
+
+		return this.openaiClient.chat.completions.create({
 			model: this.settings.model,
 			messages: [
 				{ role: 'system', content: systemMessage },
@@ -141,39 +162,26 @@ export class AIService {
 			temperature: this.settings.temperature,
 			max_tokens: 4096,
 		});
-
-		const response = await requestUrl({
-			url: this.settings.apiEndpoint,
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json',
-				'Authorization': `Bearer ${this.settings.apiKey}`,
-			},
-			body,
-			throw: false,
-		});
-
-		if (response.status >= 400) {
-			let errorMsg = `API ${response.status}`;
-			try {
-				const errorJson = response.json as AIErrorResponse;
-				if (errorJson?.error?.message) {
-					errorMsg += `: ${errorJson.error.message}`;
-				}
-			} catch {
-				if (response.text) errorMsg += `: ${response.text.slice(0, 200)}`;
-			}
-			throw new Error(errorMsg);
-		}
-
-		return response.json as AIResponse;
 	}
 
-	private extractContent(response: AIResponse): string {
-		const content = response?.choices?.[0]?.message?.content;
-		if (!content) {
-			throw new Error('Empty AI response');
+	private extractContent(response: unknown): string {
+		if (this.format === 'anthropic') {
+			const msg = response as Anthropic.Messages.Message;
+			const textBlocks = msg.content.filter(
+				(block): block is Anthropic.Messages.TextBlock => block.type === 'text'
+			);
+			const content = textBlocks.map(b => b.text).join('\n');
+			if (!content) throw new Error('Empty AI response');
+			return this.stripCodeFences(content);
 		}
+
+		const completion = response as OpenAI.Chat.Completions.ChatCompletion;
+		const content = completion?.choices?.[0]?.message?.content;
+		if (!content) throw new Error('Empty AI response');
+		return this.stripCodeFences(content);
+	}
+
+	private stripCodeFences(content: string): string {
 		let result = content.trim();
 		if (result.startsWith('```')) {
 			result = result.replace(/^```(?:markdown)?\n?/, '').replace(/\n?```$/, '');

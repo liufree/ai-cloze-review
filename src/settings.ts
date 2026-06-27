@@ -1,9 +1,12 @@
 import { App, PluginSettingTab, Setting, Notice } from 'obsidian';
 import type ClozeReviewPlugin from '../main';
 import { type Lang } from './i18n';
+import { PROVIDER_PRESETS, type ApiFormat } from './providers';
 
 export interface ClozeReviewSettings {
 	lang: 'auto' | Lang;
+	provider: string;
+	apiFormat: ApiFormat;
 	apiEndpoint: string;
 	apiKey: string;
 	model: string;
@@ -15,7 +18,9 @@ export interface ClozeReviewSettings {
 
 export const DEFAULT_SETTINGS: ClozeReviewSettings = {
 	lang: 'auto',
-	apiEndpoint: 'https://api.openai.com/v1/chat/completions',
+	provider: 'openai',
+	apiFormat: 'openai',
+	apiEndpoint: 'https://api.openai.com/v1',
 	apiKey: '',
 	model: 'gpt-4o-mini',
 	customPrompt: '',
@@ -59,11 +64,49 @@ export class ClozeReviewSettingTab extends PluginSettingTab {
 		new Setting(containerEl).setName(t.aiConfig).setHeading();
 
 		new Setting(containerEl)
+			.setName(t.provider)
+			.setDesc(t.providerDesc)
+			.addDropdown((dropdown) => {
+				for (const [id, preset] of Object.entries(PROVIDER_PRESETS)) {
+					dropdown.addOption(id, preset.name);
+				}
+				dropdown
+					.setValue(this.plugin.settings.provider || 'openai')
+					.onChange(async (value) => {
+						const preset = PROVIDER_PRESETS[value];
+						this.plugin.settings.provider = value;
+						if (value !== 'custom' && preset) {
+							this.plugin.settings.apiFormat = preset.apiFormat;
+							this.plugin.settings.apiEndpoint = preset.baseURL;
+							this.plugin.settings.model = preset.defaultModel;
+						}
+						await this.plugin.saveSettings();
+						this.plugin.aiService.updateSettings(this.plugin.settings);
+						this.display();
+					});
+			});
+
+		new Setting(containerEl)
+			.setName(t.apiFormat)
+			.setDesc(t.apiFormatDesc)
+			.addDropdown((dropdown) =>
+				dropdown
+					.addOption('openai', 'OpenAI Compatible')
+					.addOption('anthropic', 'Anthropic')
+					.setValue(this.plugin.settings.apiFormat || 'openai')
+					.onChange(async (value) => {
+						this.plugin.settings.apiFormat = value as ApiFormat;
+						await this.plugin.saveSettings();
+						this.plugin.aiService.updateSettings(this.plugin.settings);
+					})
+			);
+
+		new Setting(containerEl)
 			.setName(t.apiEndpoint)
 			.setDesc(t.apiEndpointDesc)
 			.addText((text) =>
 				text
-					.setPlaceholder('https://api.openai.com/v1/chat/completions')
+					.setPlaceholder('https://api.openai.com/v1')
 					.setValue(this.plugin.settings.apiEndpoint)
 					.onChange(async (value) => {
 						this.plugin.settings.apiEndpoint = value;

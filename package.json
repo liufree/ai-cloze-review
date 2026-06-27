@@ -1,6 +1,6 @@
 {
   "name": "ai-cloze-review",
-  "version": "1.0.8",
+  "version": "1.1.0",
   "description": "AI-powered cloze deletion review for Obsidian",
   "main": "main.js",
   "scripts": {
@@ -20,5 +20,9 @@
     "esbuild": "^0.20.0",
     "obsidian": "latest",
     "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.106.0",
+    "openai": "^6.45.0"
   }
 }
