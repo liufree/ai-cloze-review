@@ -220,6 +220,10 @@ export default class ClozeReviewPlugin extends Plugin {
 		if (this.settings.apiEndpoint?.endsWith('/chat/completions')) {
 			this.settings.apiEndpoint = this.settings.apiEndpoint.replace(/\/chat\/completions$/, '');
 		}
+
+		if (this.settings.apiFormat === 'anthropic' && this.settings.apiEndpoint === 'https://api.anthropic.com') {
+			this.settings.apiEndpoint = 'https://api.anthropic.com/v1';
+		}
 	}
 
 	private detectProvider(endpoint: string): string | null {

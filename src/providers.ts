@@ -22,7 +22,7 @@ export const PROVIDER_PRESETS: Record<string, ProviderPreset> = {
 		id: 'anthropic',
 		name: 'Anthropic (Claude)',
 		apiFormat: 'anthropic',
-		baseURL: 'https://api.anthropic.com',
+		baseURL: 'https://api.anthropic.com/v1',
 		defaultModel: 'claude-sonnet-4-20250514',
 		defaultApiKey: 'sk-ant-...',
 	},

@@ -1,7 +1,7 @@
 {
   "id": "ai-cloze-review",
   "name": "AI Cloze Review",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "minAppVersion": "1.7.2",
   "description": "AI-powered cloze deletion review - generate fill-in-the-blank content and review interactively.",
   "author": "liufree",

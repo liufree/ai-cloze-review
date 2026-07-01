@@ -1,5 +1,6 @@
-import OpenAI from 'openai';
-import Anthropic from '@anthropic-ai/sdk';
+import { generateText } from 'ai';
+import { createOpenAI } from '@ai-sdk/openai';
+import { createAnthropic } from '@ai-sdk/anthropic';
 import type { ClozeReviewSettings } from './settings';
 import type { Locale } from './i18n';
 import type { ApiFormat } from './providers';
@@ -22,39 +23,45 @@ function getDifficultyHint(difficulty: string, t: Locale): string {
 
 export class AIService {
 	private settings: ClozeReviewSettings;
-	private openaiClient: OpenAI;
-	private anthropicClient: Anthropic;
+	private openaiProvider: ReturnType<typeof createOpenAI>;
+	private anthropicProvider: ReturnType<typeof createAnthropic>;
 
 	constructor(settings: ClozeReviewSettings) {
 		this.settings = settings;
-		this.openaiClient = this.createOpenAIClient();
-		this.anthropicClient = this.createAnthropicClient();
+		this.openaiProvider = this.createOpenAIProvider();
+		this.anthropicProvider = this.createAnthropicProvider();
 	}
 
-	private createOpenAIClient(): OpenAI {
-		return new OpenAI({
+	private createOpenAIProvider() {
+		return createOpenAI({
 			baseURL: this.settings.apiEndpoint,
 			apiKey: this.settings.apiKey || 'placeholder',
-			dangerouslyAllowBrowser: true,
+			compatibility: 'compatible',
 		});
 	}
 
-	private createAnthropicClient(): Anthropic {
-		return new Anthropic({
+	private createAnthropicProvider() {
+		return createAnthropic({
 			baseURL: this.settings.apiEndpoint,
 			apiKey: this.settings.apiKey || 'placeholder',
-			dangerouslyAllowBrowser: true,
 		});
 	}
 
 	updateSettings(settings: ClozeReviewSettings): void {
 		this.settings = settings;
-		this.openaiClient = this.createOpenAIClient();
-		this.anthropicClient = this.createAnthropicClient();
+		this.openaiProvider = this.createOpenAIProvider();
+		this.anthropicProvider = this.createAnthropicProvider();
 	}
 
 	private get format(): ApiFormat {
 		return this.settings.apiFormat || 'openai';
+	}
+
+	private getModel() {
+		if (this.format === 'anthropic') {
+			return this.anthropicProvider(this.settings.model);
+		}
+		return this.openaiProvider(this.settings.model);
 	}
 
 	async testConnection(): Promise<void> {
@@ -68,24 +75,14 @@ export class AIService {
 			throw new Error('No model');
 		}
 
-		if (this.format === 'anthropic') {
-			const response = await this.anthropicClient.messages.create({
-				model: this.settings.model,
-				max_tokens: 5,
-				messages: [{ role: 'user', content: 'Hi' }],
-			});
-			if (!response.content?.[0]?.type) {
-				throw new Error('Empty response from API');
-			}
-		} else {
-			const response = await this.openaiClient.chat.completions.create({
-				model: this.settings.model,
-				messages: [{ role: 'user', content: 'Hi' }],
-				max_tokens: 5,
-			});
-			if (!response.choices?.[0]?.message?.content) {
-				throw new Error('Empty response from API');
-			}
+		const model = this.getModel();
+		const result = await generateText({
+			model,
+			messages: [{ role: 'user', content: 'Hi' }],
+			maxTokens: 5,
+		});
+		if (!result.text) {
+			throw new Error('Empty response from API');
 		}
 	}
 
@@ -109,7 +106,7 @@ export class AIService {
 		const promises = chunks.map((chunk, i) => {
 			const chunkHint = chunks.length > 1 ? `\n${locale.chunkHint.replace('{0}', String(chunkTarget))}` : '';
 			const userMessage = `${locale.userMessagePrefix}${chunkHint}\n\n${chunk}`;
-			return this.callAPI(systemMessage, userMessage).then(resp => this.extractContent(resp));
+			return this.callAPI(systemMessage, userMessage);
 		});
 
 		const results = await Promise.all(promises);
@@ -138,45 +135,21 @@ export class AIService {
 	private async callAPI(
 		systemMessage: string,
 		userMessage: string,
-	): Promise<unknown> {
+	): Promise<string> {
 		if (!this.settings.apiKey) {
 			throw new Error('API key not configured');
 		}
 
-		if (this.format === 'anthropic') {
-			return this.anthropicClient.messages.create({
-				model: this.settings.model,
-				max_tokens: 4096,
-				temperature: this.settings.temperature,
-				system: systemMessage,
-				messages: [{ role: 'user', content: userMessage }],
-			});
-		}
-
-		return this.openaiClient.chat.completions.create({
-			model: this.settings.model,
-			messages: [
-				{ role: 'system', content: systemMessage },
-				{ role: 'user', content: userMessage },
-			],
+		const model = this.getModel();
+		const result = await generateText({
+			model,
+			system: systemMessage,
+			messages: [{ role: 'user', content: userMessage }],
 			temperature: this.settings.temperature,
-			max_tokens: 4096,
+			maxTokens: 4096,
 		});
-	}
 
-	private extractContent(response: unknown): string {
-		if (this.format === 'anthropic') {
-			const msg = response as Anthropic.Messages.Message;
-			const textBlocks = msg.content.filter(
-				(block): block is Anthropic.Messages.TextBlock => block.type === 'text'
-			);
-			const content = textBlocks.map(b => b.text).join('\n');
-			if (!content) throw new Error('Empty AI response');
-			return this.stripCodeFences(content);
-		}
-
-		const completion = response as OpenAI.Chat.Completions.ChatCompletion;
-		const content = completion?.choices?.[0]?.message?.content;
+		const content = result.text;
 		if (!content) throw new Error('Empty AI response');
 		return this.stripCodeFences(content);
 	}
